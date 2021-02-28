@@ -1,0 +1,5 @@
+#!/bin/sh
+for i in $(ifconfig | awk -F':' '/wlan/ {print $1}'); do
+	ifconfig ${i} down
+	macchanger -rb ${i}
+done
