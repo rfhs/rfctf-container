@@ -4,9 +4,10 @@ DEBUG="${DEBUG:-}"
 PHY_ERR=""
 
 CONTAINER_NAME="kali-contestant"
-CONTAINER_IMAGE="quay.io/wctf/kali-rolling:defcon2020"
+CONTAINER_IMAGE="rfhs/kali:latest"
 STARTING_PHY="29"
 SSH_PORT="2202"
+VNC_PORT="8802"
 
 if [ -n "${DEBUG}" ]; then
 	set -x
@@ -40,7 +41,7 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 ${HOME}/fixphy.sh
 fi
 
-docker run -p ${SSH_PORT}:22 -p 8802:8080 --rm -it -d --net=contestant --name ${CONTAINER_NAME} \
+docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -it -d --net=contestant --name ${CONTAINER_NAME} \
 	--cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
 	-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
 	-v /var/wctf/contestant/${CONTAINER_NAME}/logs:/var/log  ${CONTAINER_IMAGE}

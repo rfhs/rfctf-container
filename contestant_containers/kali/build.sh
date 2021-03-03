@@ -1,4 +1,5 @@
 #!/bin/sh
-docker build . -t kali-wctf:0.9
-docker tag kali-wctf:latest
-docker push kali-wctf rfhs/kali
+VERS="0.9"
+docker build . -t rfhs/kali:${VERS}
+docker tag rfhs/kali:${VERS} rfhs/kali:latest
+#docker push rfhs/kali
