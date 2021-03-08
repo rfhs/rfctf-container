@@ -13,7 +13,7 @@ if [ -n "${DEBUG}" ]; then
 fi
 
 if [ -z "$(docker network ls  --filter 'name=contestant' --format '{{ .ID }}')" ]; then
-	docker network create --driver=bridge   --subnet 192.168.232.0/27 contestant
+	docker network create --driver=bridge --subnet 192.168.232.0/27 contestant
 fi
 
 if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
