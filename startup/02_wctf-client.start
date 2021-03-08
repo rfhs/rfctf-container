@@ -42,7 +42,7 @@ done
 
 if [ -n "${PHY_ERR}" ]; then
 	echo "Fixing phy interfaces with ~/fix_phy.sh"
-	FIX_PHY=1 ${HOME}/fixphy.sh
+	FIX_PHY=1 ./fixphy.sh
 fi
 
 docker run -d -it --rm --network none --name wctf-client \
@@ -51,7 +51,7 @@ docker run -d -it --rm --network none --name wctf-client \
     --workdir /home \
     --cap-add net_admin quay.io/wctf/wctf-client:defcon2020 /home/ldm 
 
-~/namespace_fixup.sh "${CONTAINER_NAME}"
+./namespace_fixup.sh "${CONTAINER_NAME}"
 
 #Pass 16 phy’s into the injection namespace with
 wctfclientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
