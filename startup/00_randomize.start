@@ -1,5 +1,19 @@
-#!/bin/sh
-for i in $(ifconfig | awk -F':' '/wlan/ {print $1}'); do
-	ifconfig ${i} down
-	macchanger -rb ${i}
+#!/bin/bash
+set -eu -o pipefail
+
+#this script configures the virtual radios
+#if this script re-runs it will remove all radios and reinitialize them
+#this means all containers will lose their virtual radios
+
+if lsmod | grep -q mac80211_hwsim; then
+  modprobe -r mac80211_hwsim
+  sleep 5
+fi
+
+modprobe mac80211_hwsim radios=40 channels=10
+sleep 5
+
+for i in $(airmon-ng | awk /mac80211_hwsim/'{print $2}'); do
+        ip link set "${i}" down;
+        macchanger -rb "${i}";
 done

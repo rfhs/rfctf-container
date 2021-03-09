@@ -5,7 +5,7 @@ PHY_ERR=""
 
 CONTAINER_NAME="kali-contestant"
 CONTAINER_IMAGE="rfhs/kali:latest"
-STARTING_PHY="29"
+STARTING_PHY="30"
 SSH_PORT="2202"
 VNC_PORT="8802"
 
@@ -54,6 +54,6 @@ docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -d --net=contestant --name
 
 #Pass 3 phy’s into the injection namespace with
 clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
-for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)); do
+for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)) $((STARTING_PHY + 3)); do
 	iw phy phy${phy_num} set netns ${clientpid}
 done
