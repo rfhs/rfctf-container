@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu -o pipefail 
+set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
 
@@ -18,11 +18,11 @@ if [ -z "$(docker network ls  --filter 'name=openwrt-eth1' --format '{{ .ID }}')
 fi
 
 if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
-	echo "Found existing ${CONTAINER_NAME} container... QUITTING" 
-	exit 1	
+	echo "Found existing ${CONTAINER_NAME} container... QUITTING"
+	exit 1
 fi
 
-if [ -f "/run/netns/${CONTAINER_NAME}" ]; then 
+if [ -f "/run/netns/${CONTAINER_NAME}" ]; then
 	echo "Stale namespace found at /run/netns/${CONTAINER_NAME}"
 	echo "Removing stale namespace"
 	ip netns delete ${CONTAINER_NAME}
@@ -33,7 +33,7 @@ for phy_num in $(seq 10 25); do
 		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
 		PHY_ERR="true"
 	fi
-		
+
 	if [ ! -d /sys/class/ieee80211/phy${phy_num}/device/net ]; then
 		echo "WARNING: phy${phy_num} is not mapped to a WLAN interface"
 		PHY_ERR="true"
@@ -49,7 +49,7 @@ docker run -d -it --rm --network none --name wctf-client \
     --privileged --userns host  \
     -v /var/wctf/client/config/wifi/liludallasmultipass:/home \
     --workdir /home \
-    --cap-add net_admin quay.io/wctf/wctf-client:defcon2020 /home/ldm 
+    --cap-add net_admin quay.io/wctf/wctf-client:defcon2020 /home/ldm
 
 ./namespace_fixup.sh "${CONTAINER_NAME}"
 
@@ -71,4 +71,3 @@ iw phy phy22 set netns ${wctfclientpid}
 iw phy phy23 set netns ${wctfclientpid}
 iw phy phy24 set netns ${wctfclientpid}
 iw phy phy25 set netns ${wctfclientpid}
-

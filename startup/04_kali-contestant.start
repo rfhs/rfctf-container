@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu -o pipefail 
+set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
 
@@ -18,11 +18,11 @@ if [ -z "$(docker network ls  --filter 'name=contestant' --format '{{ .ID }}')" 
 fi
 
 if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
-	echo "Found existing ${CONTAINER_NAME} container... QUITTING" 
-	exit 1	
+	echo "Found existing ${CONTAINER_NAME} container... QUITTING"
+	exit 1
 fi
 
-if [ -f "/run/netns/${CONTAINER_NAME}" ]; then 
+if [ -f "/run/netns/${CONTAINER_NAME}" ]; then
 	echo "Stale namespace found at /run/netns/${CONTAINER_NAME}"
 	echo "Removing stale namespace"
 	ip netns delete ${CONTAINER_NAME}
@@ -33,7 +33,7 @@ for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)); do
 		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
 		PHY_ERR="true"
 	fi
-		
+
 	if [ ! -d /sys/class/ieee80211/phy${phy_num}/device/net ]; then
 		echo "WARNING: phy${phy_num} is not mapped to a WLAN interface"
 		PHY_ERR="true"
@@ -45,7 +45,7 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 ./fixphy.sh
 fi
 
-docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -it -d --net=contestant --name ${CONTAINER_NAME} \
+docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -d --net=contestant --name ${CONTAINER_NAME} \
 	--cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
 	-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
 	-v /var/wctf/contestant/${CONTAINER_NAME}/logs:/var/log  ${CONTAINER_IMAGE}

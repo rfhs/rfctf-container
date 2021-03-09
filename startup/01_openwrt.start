@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu -o pipefail 
+set -eu -o pipefail
 
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
@@ -21,7 +21,7 @@ if [ -n "$(docker ps --filter 'name=openwrt' --format '{{ .ID }}' )" ]; then
 	exit 1	
 fi
 
-if [ -f "/run/netns/openwrt" ]; then 
+if [ -f "/run/netns/openwrt" ]; then
 	echo "Stale namespace found at /run/netns/openwrt"
 	echo "Removing stale namespace"
 	ip netns delete openwrt
@@ -32,7 +32,7 @@ for phy_num in $(seq 0 9); do
 		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
 		PHY_ERR="true"
 	fi
-		
+
 	if [ ! -d /sys/class/ieee80211/phy${phy_num}/device/net ]; then
 		echo "WARNING: phy${phy_num} is not mapped to a WLAN interface"
 		PHY_ERR="true"
@@ -48,13 +48,7 @@ docker create -it --rm --network openwrt-eth0 --name openwrt \
 	--privileged --userns host \
 	-v /var/wctf/openwrt/logs:/var/log \
    	-v /var/wctf/openwrt/config:/etc/config \
-	quay.io/wctf/openwrt:defcon2020 /sbin/init 
-
-	# configs have been re-baked into the container.  if we need to break
-	# them back out, add this back above
-	#--cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
-   	#-v /var/wctf/openwrt/config:/etc/config \
-
+	quay.io/wctf/openwrt:defcon2020 /sbin/init
 
 docker network connect openwrt-eth1 openwrt
 
@@ -76,4 +70,4 @@ iw phy phy8 set netns ${openwrtpid}
 iw phy phy9 set netns ${openwrtpid}
 
 
-#docker exec -it openwrt -- wifi down && wifi up 
+#docker exec -it openwrt -- wifi down && wifi up

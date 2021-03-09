@@ -1,12 +1,13 @@
 #!/bin/bash
-set -eu -o pipefail 
+set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
-
 
 CONTAINER_NAME="${CONTAINER_NAME:-pentoo-contestant}"
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-quay.io/wctf/pentoo:defcon2020}"
 STARTING_PHY="26"
+SSH_PORT="2201"
+VNC_PORT="8801"
 
 if [ -n "${DEBUG}" ]; then
 	set -x
@@ -32,7 +33,7 @@ for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)); do
 		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
 		PHY_ERR="true"
 	fi
-		
+
 	if [ ! -d /sys/class/ieee80211/phy${phy_num}/device/net ]; then
 		echo "WARNING: phy${phy_num} is not mapped to a WLAN interface"
 		PHY_ERR="true"
@@ -44,7 +45,7 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 ./fixphy.sh
 fi
 
-docker run -p 2201:22 -p 8801:8080 --rm -d --net=contestant	--name ${CONTAINER_NAME} \
+docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -d --net=contestant --name ${CONTAINER_NAME} \
 	--cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
 	-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
 	-v /var/wctf/contestant/${CONTAINER_NAME}/logs:/var/log  ${CONTAINER_IMAGE}
