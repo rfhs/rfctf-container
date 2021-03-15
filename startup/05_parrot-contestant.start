@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
@@ -13,7 +13,7 @@ if [ -n "${DEBUG}" ]; then
 	set -x
 fi
 
-if [ -z "$(docker network ls  --filter 'name=contestant' --format '{{ .ID }}')" ]; then
+if [ -z "$(docker network ls  --filter name=contestant --format '{{ .ID }}')" ]; then
 	docker network create --driver=bridge --subnet 192.168.232.0/27 contestant
 fi
 

@@ -1,2 +1,1 @@
 wipe/rebuild freeradius-wpe and hostapd-wpe certs
-set sshd to forward X11 by default

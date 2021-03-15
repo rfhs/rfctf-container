@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
@@ -17,7 +17,7 @@ if [ -z "$(docker network ls  --filter 'name=contestant' --format '{{ .ID }}')" 
 	docker network create --driver=bridge --subnet 192.168.232.0/27 contestant
 fi
 
-if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
+if [ -n "$(docker ps --filter name=${CONTAINER_NAME} --format '{{ .ID }}' )" ]; then
 	echo "Found existing ${CONTAINER_NAME} container... QUITTING" 
 	exit 1	
 fi

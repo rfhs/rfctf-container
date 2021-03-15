@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -eu -o pipefail
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
@@ -17,7 +17,7 @@ if [ -z "$(docker network ls  --filter 'name=contestant' --format '{{ .ID }}')" 
 	docker network create --driver=bridge --subnet 192.168.232.0/27 contestant
 fi
 
-if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
+if [ -n "$(docker ps --filter name=${CONTAINER_NAME} --format '{{ .ID }}' )" ]; then
 	echo "Found existing ${CONTAINER_NAME} container... QUITTING"
 	exit 1
 fi
@@ -56,4 +56,5 @@ docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -d --net=contestant --name
 clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
 for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)) $((STARTING_PHY + 3)); do
 	iw phy phy${phy_num} set netns ${clientpid}
+	#iw phy phy${phy_num} set netns name ${CONTAINER_NAME}
 done

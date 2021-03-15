@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -eu -o pipefail
 
 #this script configures the virtual radios
