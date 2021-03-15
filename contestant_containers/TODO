@@ -1,1 +1,1 @@
-wipe/rebuild freeradius-wpe and hostapd-wpe certs
+add shared_persistant_storage for the containers
