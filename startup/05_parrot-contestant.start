@@ -5,7 +5,7 @@ PHY_ERR=""
 
 CONTAINER_NAME="parrot-contestant"
 CONTAINER_IMAGE="rfhs/parrot:latest"
-STARTING_PHY="34"
+STARTING_PHY="32"
 SSH_PORT="2203"
 VNC_PORT="8803"
 

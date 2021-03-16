@@ -5,7 +5,7 @@ PHY_ERR=""
 
 CONTAINER_NAME="kali-contestant"
 CONTAINER_IMAGE="rfhs/kali:latest"
-STARTING_PHY="30"
+STARTING_PHY="29"
 SSH_PORT="2202"
 VNC_PORT="8802"
 
