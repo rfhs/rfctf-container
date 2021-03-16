@@ -9,7 +9,7 @@ RUN apt update && \
   cd /etc/freeradius-wpe/3.0/certs && \
   make clean && \
   cd /etc/hostapd-wpe/certs && \
-  make clean && \
+  make clean
 
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
