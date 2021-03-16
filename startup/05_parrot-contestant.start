@@ -41,7 +41,7 @@ for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)); do
 done
 
 if [ -n "${PHY_ERR}" ]; then
-	echo "Fixing phy interfaces with ~/fix_phy.sh"
+	echo "Fixing phy interfaces with ./fix_phy.sh"
 	FIX_PHY=1 ./fixphy.sh
 fi
 
