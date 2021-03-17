@@ -28,7 +28,7 @@ if [ -f "/run/netns/${CONTAINER_NAME}" ]; then
 	ip netns delete ${CONTAINER_NAME}
 fi
 
-for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)); do
+for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)) $((STARTING_PHY + 3)); do
 	if [ ! -L /sys/class/ieee80211/phy${phy_num} ]; then
 		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
 		PHY_ERR="true"

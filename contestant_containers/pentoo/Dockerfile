@@ -1,6 +1,5 @@
 FROM pentoolinux/pentoo-core
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf && \
-  echo 'VIDEO_CARDS=""' >> /etc/portage/make.conf && \
   sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf
 RUN  emerge --sync
 RUN  emerge --usepkg=y --buildpkg=n --jobs=$(nproc) pentoo/rfhs-rfctf && \
