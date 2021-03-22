@@ -1,10 +1,18 @@
-FROM pentoolinux/pentoo-core
+FROM pentoolinux/pentoo-core:latest
+ADD repos.tar.xz /
+#this run contains things which have been merged into pentoo-core and should be removed
+RUN eselect profile set pentoo:pentoo/hardened/linux/amd64_r1/binary && \
+  echo 'VIDEO_CARDS=""' >> /etc/portage/make.conf
+#CAP_SYS_ADMIN CAP_NET_ADMIN
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf && \
   sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf
-RUN  emerge --sync
-RUN  emerge --usepkg=y --buildpkg=n --jobs=$(nproc) pentoo/rfhs-rfctf && \
-  emerge --depclean --with-bdeps=n && \
-  rm -rf /var/{binpkgs,distfiles}/* /var/db/repos/*
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot
+RUN echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfhs-rfctf
+RUN emerge --jobs=$(nproc) --deep --update --newuse @world
+RUN emerge --depclean --with-bdeps=n --jobs=$(nproc)
+RUN rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/*
 
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
