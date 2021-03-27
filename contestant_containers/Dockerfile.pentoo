@@ -1,0 +1,21 @@
+FROM pentoolinux/pentoo-core:latest
+ADD repos.tar.xz /
+#CAP_SYS_ADMIN CAP_NET_ADMIN
+RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf && \
+  sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot
+RUN echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot
+RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfhs-rfctf
+RUN emerge --depclean --with-bdeps=n --jobs=$(nproc)
+RUN rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/*
+
+EXPOSE 22/tcp
+EXPOSE 8080/tcp
+ENV DISPLAY=:0
+
+WORKDIR /root/
+COPY files/cyberpunk.words /root/cyberpunk.words
+COPY files/supervisord-pentoo.conf /etc/supervisord/supervisord.conf
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
+ENTRYPOINT []
