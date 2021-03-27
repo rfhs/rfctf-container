@@ -8,30 +8,30 @@ RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
     bsdtar -C / -xvf "$patched_glibc"
 
 # Install packages
-RUN pacman -Syu --noconfirm git make gcc pkgconf which python-pip wget openssh vim tmux screen supervisor iw mlocate man pciutils less bash-completion xorg-server-xvfb x11vnc dialog xfce4 xfce4-goodies xfce4-power-manager inetutils \
+RUN pacman -Syu --noconfirm git make gcc pkgconf which python-pip wget openssh vim tmux screen supervisor iw mlocate man pciutils less bash-completion xorg-server-xvfb x11vnc dialog xfce4 xfce4-goodies xfce4-power-manager inetutils blackarch-config-xfce blackarch-menus \
 # rfctf tools
     hostapd wpa_supplicant bully wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 freeradius asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools hcxdumptool
 
 # Install packages from source
 # noVNC -- copied from https://github.com/ponsfrilus/arch-novnc
-WORKDIR /opt/
-RUN git clone https://github.com/kanaka/noVNC.git
+RUN git clone https://github.com/kanaka/noVNC.git /usr/share/noVNC
 # Avoid another checkout when launching noVnc
-WORKDIR /opt/noVNC/utils/
+WORKDIR /usr/share/noVNC/utils/
 RUN git clone https://github.com/kanaka/websockify
-
-# Expose ssh port
-EXPOSE 22/tcp
-EXPOSE 8080/tcp
-ENV DISPLAY=:0
 
 # Clean up environment
 RUN rm -r /etc/hostapd-wpe/certs/*
 
+# Expose needed ports
+EXPOSE 22/tcp
+EXPOSE 8080/tcp
+
 # Set operable environment
-WORKDIR /root
-RUN touch /root/.hushlogin
+ENV DISPLAY=:0
+
 #COPY files/cyberpunk.words /root/cyberpunk.words
 COPY files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
