@@ -1,0 +1,7 @@
+#!/bin/sh
+VERS="0.13"
+DISTRO="kali"
+docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
+#docker push rfhs/${DISTRO}
+#docker push rfhs/${DISTRO}:latest
