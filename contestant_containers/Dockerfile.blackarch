@@ -1,23 +1,24 @@
 FROM docker.io/blackarchlinux/blackarch:latest
 LABEL maintainer "Trevor Bryant <@apporima>"
 
-# Temporary patch to build on Ubuntu 20.04/10 & GitHub CI
+# Temporary patch to build container & GitHub CI
 # https://bugs.archlinux.org/index.php?do=details&task_id=69563
-RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
+RUN patched_glibc=glibc-linux4-2.33-5-x86_64.pkg.tar.zst && \
     curl -LO "https://repo.archlinuxcn.org/x86_64/$patched_glibc" && \
     bsdtar -C / -xvf "$patched_glibc"
 
 # Install packages
-RUN pacman -Syu --noconfirm git make gcc pkgconf which python-pip wget openssh vim tmux screen supervisor iw mlocate man pciutils less bash-completion xorg-server-xvfb x11vnc dialog xfce4 xfce4-goodies xfce4-power-manager inetutils blackarch-config-xfce blackarch-menus \
+RUN pacman-db-upgrade
+RUN pacman -Syu --noconfirm git make gcc pkgconf which python-pip python2-pip wget openssh vim tmux screen supervisor iw mlocate man pciutils less bash-completion xorg-server-xvfb x11vnc dialog xfce4 xfce4-goodies xfce4-power-manager inetutils blackarch-config-xfce blackarch-menus novnc \
 # rfctf tools
     hostapd wpa_supplicant bully wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 freeradius asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools hcxdumptool
 
 # Temporary solution - https://github.com/rfhs/rfctf-container/pull/3#discussion_r601797533
 # noVNC -- copied from https://github.com/ponsfrilus/arch-novnc
-RUN git clone https://github.com/kanaka/noVNC.git /usr/share/noVNC
+#RUN git clone https://github.com/kanaka/noVNC.git /usr/share/noVNC
 # Avoid another checkout when launching noVnc
-WORKDIR /usr/share/noVNC/utils/
-RUN git clone https://github.com/kanaka/websockify
+#WORKDIR /usr/share/noVNC/utils/
+#RUN git clone https://github.com/kanaka/websockify
 
 # Clean up environment
 RUN rm -r /etc/hostapd-wpe/certs/*
