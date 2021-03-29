@@ -1,14 +1,19 @@
 FROM pentoolinux/pentoo-core:latest
 ADD repos.tar.xz /
-#CAP_SYS_ADMIN CAP_NET_ADMIN
+# setup FEATURES and use flags
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf && \
-  sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf
-RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot
-RUN echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf
-RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot
-RUN emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfhs-rfctf
-RUN emerge --depclean --with-bdeps=n --jobs=$(nproc)
-RUN rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/*
+  sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf && \
+  # go is needed for termshark but has a dep loop
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot && \
+  # install binary web browsers so they are preferred
+  echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf && \
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot && \
+  # install the actual metapackage
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfhs-rfctf && \
+  # probably not needed, but make sure to clean packages we don't need
+  emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # rm all the files we don't want
+  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/*
 
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
