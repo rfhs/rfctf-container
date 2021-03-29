@@ -18,4 +18,6 @@ chown root.root /dev/shm/portage
 chown portage.portage -R /dev/shm/portage/rootfs/var/db/repos/pentoo
 chown portage.portage -R /dev/shm/portage/rootfs/var/db/repos/gentoo
 # make the unified tarball
-tar cJf repos.tar.xz -C /dev/shm/portage/rootfs/ .
+tar cJf portage_and_overlay.tar.xz -C /dev/shm/portage/rootfs/ .
+#don't waste RAM forever
+rm -rf /dev/shm/portage/rootfs/var/db/repos/gentoo

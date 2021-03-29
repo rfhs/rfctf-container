@@ -1,5 +1,5 @@
 FROM pentoolinux/pentoo-core:latest
-ADD repos.tar.xz /
+ADD portage_and_overlay.tar.xz /
 #this run contains things which have been merged into pentoo-core and should be removed
 RUN eselect profile set pentoo:pentoo/hardened/linux/amd64_r1/binary && \
   echo 'VIDEO_CARDS=""' >> /etc/portage/make.conf
