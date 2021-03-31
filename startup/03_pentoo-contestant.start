@@ -1,12 +1,11 @@
 #!/bin/bash -x
 set -eu -o pipefail
-DEBUG="${DEBUG:-}"
-PHY_ERR=""
+export DEBUG="${DEBUG:-}"
 
-CONTAINER_NAME="pentoo-contestant"
-CONTAINER_IMAGE="rfhs/pentoo:latest"
-STARTING_PHY="26"
-SSH_PORT="2201"
-VNC_PORT="8801"
+export CONTAINER_NAME="pentoo-contestant"
+export CONTAINER_IMAGE="rfhs/pentoo:latest"
+export STARTING_PHY="26"
+export SSH_PORT="2201"
+export VNC_PORT="8801"
 
 ./contestant-init

@@ -1,12 +1,11 @@
 #!/bin/bash -x
 set -eu -o pipefail
-DEBUG="${DEBUG:-}"
-PHY_ERR=""
+export DEBUG="${DEBUG:-}"
 
-CONTAINER_NAME="parrot-contestant"
-CONTAINER_IMAGE="rfhs/parrot:latest"
-STARTING_PHY="34"
-SSH_PORT="2203"
-VNC_PORT="8803"
+export CONTAINER_NAME="parrot-contestant"
+export CONTAINER_IMAGE="rfhs/parrot:latest"
+export STARTING_PHY="34"
+export SSH_PORT="2203"
+export VNC_PORT="8803"
 
 ./contestant-init

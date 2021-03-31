@@ -1,0 +1,11 @@
+#!/bin/bash -x
+set -eu -o pipefail
+export DEBUG="${DEBUG:-}"
+
+export CONTAINER_NAME="blackarch-contestant"
+export CONTAINER_IMAGE="rfhs/blackarch:latest"
+export STARTING_PHY="38"
+export SSH_PORT="2204"
+export VNC_PORT="8804"
+
+./contestant-init

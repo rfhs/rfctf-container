@@ -1,12 +1,11 @@
 #!/bin/bash -x
 set -eu -o pipefail
-DEBUG="${DEBUG:-}"
-PHY_ERR=""
+export DEBUG="${DEBUG:-}"
 
-CONTAINER_NAME="kali-contestant"
-CONTAINER_IMAGE="rfhs/kali:latest"
-STARTING_PHY="30"
-SSH_PORT="2202"
-VNC_PORT="8802"
+export CONTAINER_NAME="kali-contestant"
+export CONTAINER_IMAGE="rfhs/kali:latest"
+export STARTING_PHY="30"
+export SSH_PORT="2202"
+export VNC_PORT="8802"
 
 ./contestant-init
