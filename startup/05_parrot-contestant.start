@@ -5,64 +5,8 @@ PHY_ERR=""
 
 CONTAINER_NAME="parrot-contestant"
 CONTAINER_IMAGE="rfhs/parrot:latest"
-STARTING_PHY="32"
+STARTING_PHY="34"
 SSH_PORT="2203"
 VNC_PORT="8803"
 
-if [ -n "${DEBUG}" ]; then
-	set -x
-fi
-
-if [ -z "$(docker network ls  --filter name=contestant --format '{{ .ID }}')" ]; then
-	docker network create --driver=bridge --subnet 192.168.232.0/27 contestant
-fi
-
-if [ -n "$(docker ps --filter 'name=${CONTAINER_NAME}' --format '{{ .ID }}' )" ]; then
-	echo "Found existing ${CONTAINER_NAME} container... QUITTING"
-	exit 1
-fi
-
-if [ -f "/run/netns/${CONTAINER_NAME}" ]; then
-	echo "Stale namespace found at /run/netns/${CONTAINER_NAME}"
-	echo "Removing stale namespace"
-	ip netns delete ${CONTAINER_NAME}
-fi
-
-for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)) $((STARTING_PHY + 3)); do
-	if [ ! -L /sys/class/ieee80211/phy${phy_num} ]; then
-		echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"
-		PHY_ERR="true"
-	fi
-
-	if [ ! -d /sys/class/ieee80211/phy${phy_num}/device/net ]; then
-		echo "WARNING: phy${phy_num} is not mapped to a WLAN interface"
-		PHY_ERR="true"
-	fi
-done
-
-if [ -n "${PHY_ERR}" ]; then
-	echo "Fixing phy interfaces with ./fix_phy.sh"
-	FIX_PHY=1 ./fixphy.sh
-fi
-
-docker run -p ${SSH_PORT}:22 -p ${VNC_PORT}:8080 --rm -d --net=contestant --name ${CONTAINER_NAME} \
-	--cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
-	-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
-	-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
-	-v /var/wctf/contestant/${CONTAINER_NAME}/logs:/var/log  ${CONTAINER_IMAGE}
-
-./namespace_fixup.sh "${CONTAINER_NAME}"
-
-#Pass 3 phy’s into the injection namespace with
-clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
-for phy_num in ${STARTING_PHY} $((STARTING_PHY + 1)) $((STARTING_PHY + 2)) $((STARTING_PHY + 3)); do
-  while true; do
-    if iw phy phy${phy_num} info > /dev/null 2>&1; then
-      printf "Found phy${phy_num}, moving it into ${CONTAINER_NAME}\n"
-      break
-    fi
-    printf "Unable to find phy${phy_num}, waiting...\n"
-    sleep 1
-  done
-	iw phy phy${phy_num} set netns ${clientpid}
-done
+./contestant-init

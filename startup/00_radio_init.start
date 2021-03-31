@@ -10,10 +10,4 @@ if lsmod | grep -q mac80211_hwsim; then
   sleep 5
 fi
 
-modprobe mac80211_hwsim radios=40 channels=10
-sleep 5
-
-for i in $(airmon-ng | awk /mac80211_hwsim/'{print $2}'); do
-        ip link set "${i}" down;
-        macchanger -rb "${i}";
-done
+modprobe mac80211_hwsim radios=42 channels=10
