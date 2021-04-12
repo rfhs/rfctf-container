@@ -48,7 +48,7 @@ docker create -it --rm --network openwrt-eth0 --name openwrt \
 	--privileged --userns host \
 	-v /var/wctf/openwrt/logs:/var/log \
   -v /var/wctf/openwrt/config:/etc/config:ro \
-	quay.io/wctf/openwrt:defcon2020 /sbin/init
+	rfhs/openwrt:latest /sbin/init
 
 docker network connect openwrt-eth1 openwrt
 
