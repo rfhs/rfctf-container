@@ -3,8 +3,9 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="pentoo-contestant"
-export CONTAINER_IMAGE="rfhs/pentoo:latest"
+export CONTAINER_IMAGE="rfhs/pentoo"
 export CONTAINER_PHYS="26 27 28 29"
+export CONTAINER_NETWORKS="contestant"
 export SSH_PORT="2201"
 export VNC_PORT="8801"
 

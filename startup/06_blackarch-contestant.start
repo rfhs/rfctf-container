@@ -3,8 +3,9 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="blackarch-contestant"
-export CONTAINER_IMAGE="rfhs/blackarch:latest"
+export CONTAINER_IMAGE="rfhs/blackarch"
 export CONTAINER_PHYS="38 39 40 41"
+export CONTAINER_NETWORKS="contestant"
 export SSH_PORT="2204"
 export VNC_PORT="8804"
 
