@@ -4,7 +4,7 @@ export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="kali-contestant"
 export CONTAINER_IMAGE="rfhs/kali:latest"
-export STARTING_PHY="30"
+export CONTAINER_PHYS="30 31 32 33"
 export SSH_PORT="2202"
 export VNC_PORT="8802"
 
