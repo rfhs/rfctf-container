@@ -9,4 +9,4 @@ export CONTAINER_PHYS
 #container_networks can't really be changed right now as some of it is hardcoded in contestant-init
 export CONTAINER_NETWORKS="openwrt-eth0 openwrt-eth1"
 
-./contestant-init
+./rfhs-container-init

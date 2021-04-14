@@ -9,4 +9,4 @@ export CONTAINER_NETWORKS="contestant"
 export SSH_PORT="2203"
 export VNC_PORT="8803"
 
-./contestant-init
+./rfhs-container-init
