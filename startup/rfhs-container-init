@@ -52,15 +52,25 @@ if [ "${CONTAINER_NETWORK}" = "contestant" ]; then
     -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
     -v /var/wctf/contestant/"${CONTAINER_NAME}"/logs:/var/log  "${CONTAINER_IMAGE}"
 else
-  docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
-    --privileged --userns host \
-    -v /var/wctf/openwrt/logs:/var/log \
-    -v /var/wctf/openwrt/config:/etc/config:ro \
-    "${CONTAINER_IMAGE}"
+  if [ "${CONTAINER_NAME}" = "openwrt" ]; then
+    docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
+      --privileged --userns host \
+      -v /var/wctf/openwrt/logs:/var/log \
+      -v /var/wctf/openwrt/config:/etc/config:ro \
+      "${CONTAINER_IMAGE}"
 
-  docker network connect openwrt-eth1 "${CONTAINER_NAME}"
+    docker network connect openwrt-eth1 "${CONTAINER_NAME}"
 
-  docker start "${CONTAINER_NAME}"
+    docker start "${CONTAINER_NAME}"
+  else
+    if [ "${CONTAINER_NAME}" = "rfctf-client" ]; then
+      docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
+        --privileged --userns host  \
+        -v /var/wctf/client/config/wifi/liludallasmultipass:/home \
+        --workdir /home \
+        --cap-add net_admin "${CONTAINER_IMAGE}" /home/ldm
+    fi
+  fi
 fi
 
 ./namespace_fixup.sh "${CONTAINER_NAME}"
