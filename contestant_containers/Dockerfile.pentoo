@@ -1,4 +1,4 @@
-FROM pentoolinux/pentoo-core:latest
+FROM docker.io/pentoolinux/pentoo-core:latest
 ADD portage_and_overlay.tar.xz /
 # setup FEATURES and use flags
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf && \
