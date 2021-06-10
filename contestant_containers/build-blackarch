@@ -1,7 +1,6 @@
 #!/bin/sh
-VERS="0.14"
+VERS="0.15"
 DISTRO="blackarch"
-#./make_gentoo_cache.sh
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 #docker push rfhs/${DISTRO}
