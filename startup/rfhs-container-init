@@ -45,7 +45,7 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 ./fixphy.sh
 fi
 
-if [ "${CONTAINER_NETWORK}" = "contestant" ]; then
+if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
   docker run -p "${SSH_PORT}":22 -p "${VNC_PORT}":8080 --rm -d --net=contestant --name "${CONTAINER_NAME}" \
     --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
     -v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
