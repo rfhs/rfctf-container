@@ -48,6 +48,7 @@ fi
 if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
   docker run -p "${SSH_PORT}":22 -p "${VNC_PORT}":8080 --rm -d --net=contestant --name "${CONTAINER_NAME}" \
     --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
+    --security-opt seccomp=unconfined \
     -v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
     -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
     -v /var/wctf/contestant/"${CONTAINER_NAME}"/logs:/var/log  "${CONTAINER_IMAGE}"
