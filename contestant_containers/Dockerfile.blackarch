@@ -19,11 +19,13 @@ RUN pacman -Syu --noconfirm make && \
     blackarch-config-cursor blackarch-config-icons blackarch-config-zsh ttf-liberation hostapd freeradius wpa_supplicant bully \
     wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools \
     hcxdumptool wifi-honey && \
-# Clean up environment
+    # Uninstall broken package
+    pacman -R --noconfirm xfce4-power-manager && \
+    # Clean up environment
     rm -r /etc/hostapd-wpe/certs/* && \
-# Point wallpaper to the right files
+    # Point wallpaper to the right files
     sed -i 's/backgrounds\/blackarch.png/blackarch\/wallpaper.png/g' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml && \
-# Copy BlackArch configs
+    # Copy BlackArch configs
     cp -r /etc/skel/. /root/.
 
 # Expose needed ports
