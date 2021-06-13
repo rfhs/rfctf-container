@@ -18,7 +18,7 @@ RUN pacman -Syu --noconfirm make && \
     xorg-server-xvfb x11vnc xfce4 xfce4-goodies xfce4-power-manager blackarch-config-xfce blackarch-menus blackarch-wallpaper \
     blackarch-config-cursor blackarch-config-icons blackarch-config-zsh ttf-liberation hostapd freeradius wpa_supplicant bully \
     wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools \
-    hcxdumptool wifi-honey && \
+    hcxdumptool wifi-honey tcpdump nmap && \
     # Uninstall broken package
     pacman -R --noconfirm xfce4-power-manager && \
     # Clean up environment
