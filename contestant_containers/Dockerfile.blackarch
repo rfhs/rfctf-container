@@ -35,7 +35,7 @@ EXPOSE 8080/tcp
 # Set operable environment
 ENV DISPLAY=:0
 
-COPY files/cyberpunk.words /root/cyberpunk.words
+COPY files/wigle.words /root/wigle.words
 COPY files/supervisord-blackarch.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /root
