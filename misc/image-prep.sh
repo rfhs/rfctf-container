@@ -21,5 +21,8 @@ docker rmi $(docker images | grep "<none>" | awk '{print $3}')
 rm -rf "$(portageq envvar DISTDIR)"/*
 rm -rf "$(portageq envvar PKGDIR)"/*
 
+# ensure shared-persistent_storage is empty
+rm -rf /var/wctf/shared_persistent_storage/*
+
 # clean cloud init
 cloud-init clean
