@@ -15,7 +15,9 @@ for image in $(docker image ls | grep '^rfhs' | awk '{print $1}'); do
   docker pull "${image}"
 done
 # cleanup untagged docker images
-docker rmi $(docker images | grep "<none>" | awk '{print $3}')
+if [ -n "$(docker images | grep "<none>" | awk '{print $3}')" ]; then
+  docker rmi $(docker images | grep "<none>" | awk '{print $3}')
+fi
 
 # cleanup unneeded gentoo files leftover from upgrading
 rm -rf "$(portageq envvar DISTDIR)"/*
