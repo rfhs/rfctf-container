@@ -10,4 +10,4 @@ if lsmod | grep -q mac80211_hwsim; then
   sleep 5
 fi
 
-modprobe mac80211_hwsim radios=42 channels=10
+modprobe mac80211_hwsim radios=43 channels=10
