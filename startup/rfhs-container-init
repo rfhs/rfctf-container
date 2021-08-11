@@ -51,23 +51,16 @@ if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
     --security-opt seccomp=unconfined \
     -v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
     -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
+    -v /run/rfctf_status:/run/rfctf_status:ro \
     -v /var/wctf/contestant/"${CONTAINER_NAME}"/logs:/var/log  "${CONTAINER_IMAGE}"
 else
   if [ "${CONTAINER_NAME}" = "openwrt" ]; then
     docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --privileged --userns host \
       -v /var/wctf/openwrt/logs:/var/log \
-      -v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config:/etc/config:ro \
-      -v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/xinetd.d/fakepop:/etc/xinetd.d/fakepop:ro \
+      -v /run/rfctf_status:/run/rfctf_status \
+      $(for i in $(find /var/wctf/client/config/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/var/wctf/client/config/wifi/openwrt/airkraken/files}:ro "; done) \
       "${CONTAINER_IMAGE}"
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/dhcp:/etc/config/dhcp:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/firewall:/etc/config/firewall:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/network:/etc/config/network:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/system:/etc/config/system:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/uhttpd:/etc/config/uhttpd:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/unbound:/etc/config/unbound:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/etc/config/wireless:/etc/config/wireless:ro \
-      #-v /var/wctf/client/config/wifi/openwrt/airkraken/files/wctf_12/index.html:/wctf_12/index.html:ro \
 
     docker network connect openwrt-eth1 "${CONTAINER_NAME}"
 
@@ -77,6 +70,7 @@ else
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --privileged --userns host  \
         -v /var/wctf/client/config/wifi/liludallasmultipass:/home \
+        -v /run/rfctf_status:/run/rfctf_status \
         --workdir /home \
         --cap-add net_admin "${CONTAINER_IMAGE}" /home/ldm
     fi
