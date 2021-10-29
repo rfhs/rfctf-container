@@ -22,6 +22,8 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/pentoo-opencl && \
   # install the additional packages we want, missing gr-lora_sdr and nrsc5
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc app-crypt/hashcat net-analyzer/wireshark net-analyzer/termshark app-misc/tmux net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
+  # sox is busted, not sure why, get an error
+  emerge --getbinpkg=y --buildpkg=n --jobs=1 --deep --update --newuse media-sound/sox && \
   # configure the gui to be nicer
   # magic to autohide panel 2
   magic_number=$(($(sed -n '/<value type="int" value="14"\/>/=' /etc/xdg/xfce4/panel/default.xml)+1)) && \
