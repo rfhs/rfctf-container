@@ -51,14 +51,13 @@ if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
     --security-opt seccomp=unconfined \
     -v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys \
     -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
-    -v /run/rfctf_status:/run/rfctf_status:ro \
     -v /var/wctf/contestant/"${CONTAINER_NAME}"/logs:/var/log  "${CONTAINER_IMAGE}"
 else
   if [ "${CONTAINER_NAME}" = "openwrt" ]; then
     docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --privileged --userns host \
+      -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
       -v /var/wctf/openwrt/logs:/var/log \
-      -v /run/rfctf_status:/run/rfctf_status \
       $(for i in $(find /var/wctf/client/config/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/var/wctf/client/config/wifi/openwrt/airkraken/files}:ro "; done) \
       "${CONTAINER_IMAGE}"
 
@@ -70,7 +69,6 @@ else
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --privileged --userns host  \
         -v /var/wctf/client/config/wifi/liludallasmultipass:/home \
-        -v /run/rfctf_status:/run/rfctf_status \
         --workdir /home \
         --cap-add net_admin "${CONTAINER_IMAGE}" /home/ldm
     fi
