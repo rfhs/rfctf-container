@@ -25,17 +25,19 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/pentoo-opencl && \
   # install the additional packages we want, missing gr-lora_sdr and nrsc5
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc app-crypt/hashcat net-analyzer/wireshark net-analyzer/termshark app-misc/tmux net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
+  # rm all the files we don't want
+  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/*
+RUN \
   # configure the gui to be nicer
   # magic to autohide panel 2
   magic_number=$(($(sed -n '/<value type="int" value="14"\/>/=' /etc/xdg/xfce4/panel/default.xml)+1)) && \
   sed -i "${magic_number} a\    <property name=\"autohide-behavior\" type=\"uint\" value=\"1\"/>" /etc/xdg/xfce4/panel/default.xml && \
   # set wallpaper
   mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml/ && \
-  cp /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml /root/.config/xfce4/xfconf/xfce-perchannel-xml/ && \
+  cp /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml /root/.config/xfce4/xfconf/xfce-perchannel-xml/
+RUN \
   # make sure the menus exist
-  genmenu.py -x && \
-  # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/*
+  genmenu.py -x
 
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
