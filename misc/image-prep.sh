@@ -26,5 +26,8 @@ rm -rf "$(portageq envvar PKGDIR)"/*
 # ensure shared-persistent_storage is empty
 rm -rf /var/wctf/shared_persistent_storage/*
 
+#wipe all the container logs
+find /var/wctf/contestant/ -type f -not -name authorized_keys -exec rm -rf {} \;
+
 # clean cloud init
 cloud-init clean
