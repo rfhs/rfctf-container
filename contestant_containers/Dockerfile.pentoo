@@ -24,7 +24,7 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
   # install the distro opencl stuff because gentoo is weird
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/pentoo-opencl && \
   # install the additional packages we want, missing gr-lora_sdr and nrsc5
-  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc app-crypt/hashcat net-analyzer/wireshark net-analyzer/termshark app-misc/tmux net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc app-crypt/hashcat net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
   # rm all the files we don't want
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/*
 RUN \
