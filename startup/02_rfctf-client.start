@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="rfctf-client"
-export CONTAINER_IMAGE="rfhs/rfctf-client"
+export CONTAINER_IMAGE="rfhs/client_server"
 CONTAINER_PHYS="$(seq 10 25)"
 export CONTAINER_PHYS
 export CONTAINER_NETWORKS=""
