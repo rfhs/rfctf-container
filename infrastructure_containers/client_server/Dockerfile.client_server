@@ -11,7 +11,7 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
 # setup leeloodallasmultipass (git is pulled in indirectly via ruby->bundler->git
 RUN cd /root/ && \
-  git clone git@github.com:rfhs/leeloodallasmultipass.git && \
+  git clone https://github.com/rfhs/leeloodallasmultipass.git && \
   # rm all the files we don't want
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
 
