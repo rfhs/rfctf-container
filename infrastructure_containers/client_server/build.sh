@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.3"
+VERS="0.4"
 DISTRO="client_server"
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
