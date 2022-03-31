@@ -58,8 +58,9 @@ else
       --privileged --userns host \
       -v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage \
       -v /var/wctf/openwrt/logs:/var/log \
-      $(for i in $(find /var/wctf/client/config/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/var/wctf/client/config/wifi/openwrt/airkraken/files}:ro "; done) \
       "${CONTAINER_IMAGE}"
+      #$(for i in $(find /var/wctf/client/config/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/var/wctf/client/config/wifi/openwrt/airkraken/files}:ro "; done) \
+      #$(for i in $(find /root/wctf-restricted/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/root/wctf-restricted/wifi/openwrt/airkraken/files}:ro "; done) \
 
     docker network connect openwrt-eth1 "${CONTAINER_NAME}"
 
@@ -68,9 +69,19 @@ else
     if [ "${CONTAINER_NAME}" = "rfctf-client" ]; then
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --privileged --userns host  \
-        -v /var/wctf/client/config/wifi/liludallasmultipass:/home \
+        -v /root/wctf-restricted/wifi/leeloodallasmultipass/config:/root/leeloodallasmultipass/config \
+        -v /root/wctf-restricted/wifi/leeloodallasmultipass/helpers:/root/leeloodallasmultipass/helpers \
+        -v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf \
+        "${CONTAINER_IMAGE}"
+    fi
+    #this stuff isn't public yet so don't try
+    if [ "${CONTAINER_NAME}" = "rfctf-sdr" ]; then
+      docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
+        --privileged --userns host  \
+        -v /dev:/dev \
+        -v /root/challengectl:/home/ \
         --workdir /home \
-        --cap-add net_admin "${CONTAINER_IMAGE}" /home/ldm
+        "${CONTAINER_IMAGE}" ./challengectl.py shmoo22_flags.csv devices.txt.rfhs
     fi
   fi
 fi
