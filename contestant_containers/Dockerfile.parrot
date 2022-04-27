@@ -23,8 +23,8 @@ RUN sed -i 's#https://deb.parrot.sh/parrot#https://ftp.osuosl.org/pub/parrotos#g
   rm -f /etc/ssh/ssh_host_* && \
   cd /etc/freeradius-wpe/3.0/certs && \
   make clean && \
-  cd /etc/hostapd-wpe/certs && \
-  make clean
+  cd /etc/hostapd-mana/certs && \
+  rm ca.pem csr.csr dhparam.pem server.key server.pem
 
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
