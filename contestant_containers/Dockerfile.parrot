@@ -7,16 +7,16 @@ RUN sed -i 's#https://deb.parrot.sh/parrot#https://ftp.osuosl.org/pub/parrotos#g
   # dpkg -P --force-depends xfce4-power-manager-plugins && \
   # rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml && \
   # sed -i '/power-manager-plugin/d' /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y equivs && \
-  equivs-control xfce4-power-manager-plugins && \
-  sed -i "s/Package:.*/Package: xfce4-power-manager-plugins/" xfce4-power-manager-plugins && \
-  sed -i "s/^# Version:.*/Version: 1:4.16.0-1/" xfce4-power-manager-plugins && \
-  equivs-build xfce4-power-manager-plugins && \
-  mv ./xfce4-power-manager-plugins_4.16.0-1_all.deb /tmp/ && \
-  chmod 666 /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  apt-get -o Dpkg::Options::="--force-confnew" install -y /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  rm /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  apt-get purge -y equivs && \
+  # DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y equivs && \
+  # equivs-control xfce4-power-manager-plugins && \
+  # sed -i "s/Package:.*/Package: xfce4-power-manager-plugins/" xfce4-power-manager-plugins && \
+  # sed -i "s/^# Version:.*/Version: 1:4.16.0-1/" xfce4-power-manager-plugins && \
+  # equivs-build xfce4-power-manager-plugins && \
+  # mv ./xfce4-power-manager-plugins_4.16.0-1_all.deb /tmp/ && \
+  # chmod 666 /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  # apt-get -o Dpkg::Options::="--force-confnew" install -y /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  # rm /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  # apt-get purge -y equivs && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
