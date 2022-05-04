@@ -46,24 +46,24 @@ if [ -n "${PHY_ERR}" ]; then
 fi
 
 if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
-  [ ! -d "var/log/rfhs/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs/${CONTAINER_NAME}"
+  [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
   docker run -p "${SSH_PORT}":22 -p "${VNC_PORT}":8080 --rm -d --net=contestant --name "${CONTAINER_NAME}" \
     --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
     --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
     --security-opt seccomp=unconfined \
     $([ -f '/var/wctf/contestant/key/authorized_keys' ] && echo '-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys') \
     $([ -d '/var/wctf/shared_persistent_storage' ] && echo '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage') \
-    -v /var/log/rfhs/${CONTAINER_NAME}:/var/log \
+    -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
     "${CONTAINER_IMAGE}"
 else
   if [ "${CONTAINER_NAME}" = "openwrt" ]; then
-    [ ! -d "var/log/rfhs/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs/${CONTAINER_NAME}"
+    [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
     docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
       --privileged --userns host \
       $([ -d '/var/wctf/shared_persistent_storage' ] && echo '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage') \
       $(if [ -d '/root/wctf-restricted' ]; then for i in $(find /root/wctf-restricted/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/root/wctf-restricted/wifi/openwrt/airkraken/files}:ro "; done; fi) \
-      -v /var/log/rfhs/${CONTAINER_NAME}:/var/log \
+      -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
       "${CONTAINER_IMAGE}"
 
     docker network connect openwrt-eth1 "${CONTAINER_NAME}"
@@ -71,26 +71,26 @@ else
     docker start "${CONTAINER_NAME}"
   else
     if [ "${CONTAINER_NAME}" = "rfctf-client" ]; then
-      [ ! -d "var/log/rfhs/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs/${CONTAINER_NAME}"
+      [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
         --privileged --userns host  \
         $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/config:/root/leeloodallasmultipass/config') \
         $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/helpers:/root/leeloodallasmultipass/helpers') \
         $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf') \
-        -v /var/log/rfhs/${CONTAINER_NAME}:/var/log \
+        -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
         "${CONTAINER_IMAGE}"
     fi
     #this stuff isn't public yet so don't try
     if [ "${CONTAINER_NAME}" = "rfctf-sdr" ]; then
-      [ ! -d "var/log/rfhs/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs/${CONTAINER_NAME}"
+      [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
         --privileged --userns host  \
         -v /dev:/dev \
         -v /root/challengectl:/home/ \
         --workdir /home \
-        -v /var/log/rfhs/${CONTAINER_NAME}:/var/log \
+        -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
         "${CONTAINER_IMAGE}" ./challengectl.py shmoo22_flags.csv devices.txt.rfhs
     fi
   fi

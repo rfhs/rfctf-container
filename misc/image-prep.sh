@@ -28,6 +28,7 @@ rm -rf /var/wctf/shared_persistent_storage/*
 
 #wipe all the container logs
 find /var/wctf/contestant/ -type f -not -name authorized_keys -exec rm -rf {} \;
+find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
 
 # clean cloud init
 cloud-init clean
