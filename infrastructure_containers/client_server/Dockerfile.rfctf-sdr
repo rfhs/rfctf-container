@@ -1,0 +1,13 @@
+FROM pentoolinux/pentoo-core:latest
+ADD portage_and_overlay.tar.xz /
+# setup FEATURES and use flags
+RUN sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && \
+  # install the actual metapackage
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfctf-client && \
+  # probably not needed, but make sure to clean packages we don't need
+  emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # rm all the files we don't want
+  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
+WORKDIR /root/challengectl/
+CMD ["/bin/bash"]
+ENTRYPOINT []
