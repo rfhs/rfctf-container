@@ -1,5 +1,5 @@
-#!/bin/bash -x
-set -eu -o pipefail
+#!/bin/sh
+set -eu
 DEBUG="${DEBUG:-}"
 PHY_ERR=""
 
@@ -7,8 +7,9 @@ if [ -n "${DEBUG}" ]; then
 	set -x
 fi
 
+# shellcheck disable=SC2153
 for CONTAINER_NETWORK in ${CONTAINER_NETWORKS}; do
-  if [ -z "$(docker network ls  --filter name=${CONTAINER_NETWORK} --format '{{ .ID }}')" ]; then
+  if [ -z "$(docker network ls  --filter name="${CONTAINER_NETWORK}" --format '{{ .ID }}')" ]; then
     if [ "${CONTAINER_NETWORK}" = "contestant" ]; then
       docker network create --driver=bridge --subnet 192.168.232.0/27 "${CONTAINER_NETWORK}"
     else
@@ -17,7 +18,7 @@ for CONTAINER_NETWORK in ${CONTAINER_NETWORKS}; do
   fi
 done
 
-if [ -n "$(docker ps --filter name=${CONTAINER_NAME} --format '{{ .ID }}' )" ]; then
+if [ -n "$(docker ps --filter name="${CONTAINER_NAME}" --format '{{ .ID }}' )" ]; then
 	echo "Found existing ${CONTAINER_NAME} container... QUITTING"
 	exit 1
 fi
@@ -45,25 +46,25 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 ./fixphy.sh
 fi
 
+[ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
+
 if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
-  [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
   docker run -p "${SSH_PORT}":22 -p "${VNC_PORT}":8080 --rm -d --net=contestant --name "${CONTAINER_NAME}" \
     --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
     --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
     --security-opt seccomp=unconfined \
-    $([ -f '/var/wctf/contestant/key/authorized_keys' ] && echo '-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys') \
-    $([ -d '/var/wctf/shared_persistent_storage' ] && echo '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage') \
-    -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
+    "$([ -f '/var/wctf/contestant/key/authorized_keys' ] && printf -- '-v /var/wctf/contestant/key/authorized_keys:/root/.ssh/authorized_keys\n')" \
+    "$([ -d '/var/wctf/shared_persistent_storage' ] && printf -- '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage\n')" \
+    -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
     "${CONTAINER_IMAGE}"
 else
   if [ "${CONTAINER_NAME}" = "openwrt" ]; then
-    [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
     docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
       --privileged --userns host \
-      $([ -d '/var/wctf/shared_persistent_storage' ] && echo '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage') \
-      $(if [ -d '/root/wctf-restricted' ]; then for i in $(find /root/wctf-restricted/wifi/openwrt/airkraken/files -type f); do echo "-v ${i}:${i##/root/wctf-restricted/wifi/openwrt/airkraken/files}:ro "; done; fi) \
-      -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
+      "$([ -d '/var/wctf/shared_persistent_storage' ] && printf -- '-v /var/wctf/shared_persistent_storage:/root/shared_persistent_storage\n')" \
+      "$(if [ -d '/root/wctf-restricted' ]; then find '/root/wctf-restricted/wifi/openwrt/airkraken/files' -type f -exec printf "-v %s:%s\n" "{}" "{}" \; | sed 's#:/root/wctf-restricted/wifi/openwrt/airkraken/files#:#;s#$#:ro#'; fi)" \
+      -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
       "${CONTAINER_IMAGE}"
 
     docker network connect openwrt-eth1 "${CONTAINER_NAME}"
@@ -71,25 +72,23 @@ else
     docker start "${CONTAINER_NAME}"
   else
     if [ "${CONTAINER_NAME}" = "rfctf-client" ]; then
-      [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
         --privileged --userns host  \
-        $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/config:/root/leeloodallasmultipass/config') \
-        $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/helpers:/root/leeloodallasmultipass/helpers') \
-        $([ -d '/root/wctf-restricted' ] && echo '-v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf') \
-        -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
+        "$([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/config:/root/leeloodallasmultipass/config\n')" \
+        "$([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/helpers:/root/leeloodallasmultipass/helpers\n')" \
+        "$([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf\n')" \
+        -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
         "${CONTAINER_IMAGE}"
     fi
     #challengectl isn't public yet so this won't work for you
     if [ "${CONTAINER_NAME}" = "rfctf-sdr" ]; then
-      [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
         --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
         --privileged --userns host  \
         -v /dev:/dev \
         -v /root/challengectl:/root/challengectl \
-        -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
+        -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
         "${CONTAINER_IMAGE}" ./challengectl.py shmoo22_flags.csv devices.txt.rfhs
     fi
   fi
@@ -101,10 +100,10 @@ clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
 for phy_num in ${CONTAINER_PHYS}; do
   while true; do
     if iw phy "phy${phy_num}" info > /dev/null 2>&1; then
-      printf "Found phy${phy_num}, moving it into ${CONTAINER_NAME}\n"
+      printf "Found phy%s, moving it into %s\n" "${phy_num}" "${CONTAINER_NAME}"
       break
     fi
-    printf "Unable to find phy${phy_num}, waiting...\n"
+    printf "Unable to find phy%s, waiting...\n" "${phy_num}"
     sleep 1
   done
 	iw phy "phy${phy_num}" set netns "${clientpid}"
