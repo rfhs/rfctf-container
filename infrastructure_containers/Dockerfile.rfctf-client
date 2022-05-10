@@ -25,6 +25,6 @@ RUN cd /root/ && \
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
 
 WORKDIR /root/leeloodallasmultipass/
-COPY files/supervisord.conf /etc/supervisord/supervisord.conf
+COPY files/supervisord-client.conf /etc/supervisord/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
