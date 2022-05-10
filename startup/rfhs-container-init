@@ -81,7 +81,7 @@ else
         -v /var/log/rfhs-rfctf/${CONTAINER_NAME}:/var/log \
         "${CONTAINER_IMAGE}"
     fi
-    #this stuff isn't public yet so don't try
+    #challengectl isn't public yet so this won't work for you
     if [ "${CONTAINER_NAME}" = "rfctf-sdr" ]; then
       [ ! -d "var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
       docker run -d -it --rm --network none --name "${CONTAINER_NAME}" \
