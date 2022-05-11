@@ -1,13 +1,8 @@
 #!/bin/sh
-set -e
+set -eu
 VERS="1.0"
 DISTRO="rfctf-client"
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
-docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
-if [ "$(hostname)" = "Nu" ] ; then
-  docker push rfhs/${DISTRO}
-  docker push rfhs/${DISTRO}:latest
-fi
 
 ## You know what all the cool kids like?  CI!  Time to test like a boss
 # This is probably unsafe AND requires root.  I'd rather CI than no CI though, so for now it's happening
@@ -16,7 +11,7 @@ fi
 # This just modprobes and rips out the module, needed or otherwise, which means it's not parallel safe at all
 
 # Start by removing hwsim and then making 4 hwsim devices
-CONTAINER_NAME="${CI_REGISTRY_IMAGE}-${IMAGE}-ci"
+CONTAINER_NAME="rfhs-${DISTRO}-ci"
 if lsmod | grep -q mac80211_hwsim; then
   sudo modprobe -r mac80211_hwsim
   sleep 5
@@ -37,7 +32,7 @@ CONTAINER_PHYS="phy10 phy11 phy12 phy13 phy14 phy15 phy16 phy17 phy18 phy19 phy2
 # Start the container
 docker run -d --rm --network none --name "${CONTAINER_NAME}" \
   --cap-add net_raw --cap-add net_admin \
-  "${CI_REGISTRY_IMAGE}/${IMAGE}:${BUILD_VERSION_NUMBER}"
+  "rfhs/${DISTRO}:${VERS}"
   #--privileged --userns host \
 # Give it radios
 clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
@@ -54,9 +49,11 @@ for phy in ${CONTAINER_PHYS}; do
 done
 sleep 90
 if docker exec -it "${CONTAINER_NAME}" './ldm_checker --test'; then
-  docker tag "${CI_REGISTRY_IMAGE}/${IMAGE}:${BUILD_VERSION_NUMBER}" "${CI_REGISTRY_IMAGE}/${IMAGE}:latest"
-  docker push "${CI_REGISTRY_IMAGE}/${IMAGE}:${BUILD_VERSION_NUMBER}"
-  docker push "${CI_REGISTRY_IMAGE}/${IMAGE}:latest"
+  docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
+  if [ "$(hostname)" = "Nu" ] ; then
+    docker push "rfhs/${DISTRO}:${VERS}"
+    docker push "rfhs/${DISTRO}:latest"
+  fi
   exit_code=0
 else
   printf "rfhs_checker failed!\n"
@@ -64,5 +61,4 @@ else
 fi
 docker stop "${CONTAINER_NAME}"
 sudo modprobe -r mac80211_hwsim
-rm "${TARBALL}"
 exit "${exit_code}"
