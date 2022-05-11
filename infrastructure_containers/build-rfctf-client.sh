@@ -21,7 +21,7 @@ if lsmod | grep -q mac80211_hwsim; then
   sudo modprobe -r mac80211_hwsim
   sleep 5
 fi
-sudo modprobe mac80211_hwsim radios=4
+sudo modprobe mac80211_hwsim radios=26
 # stop all running docker containers
 if [ -n "$(docker ps -a -q)" ]; then
   docker stop $(docker ps -a -q)
@@ -53,7 +53,7 @@ for phy in ${CONTAINER_PHYS}; do
   sudo iw phy "${phy}" set netns "${clientpid}"
 done
 sleep 90
-if docker exec -it "${CONTAINER_NAME}" /usr/sbin/rfhs_checker; then
+if docker exec -it "${CONTAINER_NAME}" './ldm_checker --test'; then
   docker tag "${CI_REGISTRY_IMAGE}/${IMAGE}:${BUILD_VERSION_NUMBER}" "${CI_REGISTRY_IMAGE}/${IMAGE}:latest"
   docker push "${CI_REGISTRY_IMAGE}/${IMAGE}:${BUILD_VERSION_NUMBER}"
   docker push "${CI_REGISTRY_IMAGE}/${IMAGE}:latest"
