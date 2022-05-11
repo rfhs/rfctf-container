@@ -33,7 +33,7 @@ create_ns_link() {
   fi
   mkdir -p /run/netns/
   touch "/run/netns/${CONTAINER_NAME}"
-  printf "Mapping namespaces of process id %s for %s to namespace name %s" "${PID}" "${CONTAINER_NAME}" "${CONTAINER_NAME}"
+  printf "Mapping namespaces of process id %s for %s to namespace name %s\n" "${PID}" "${CONTAINER_NAME}" "${CONTAINER_NAME}"
   mount -o bind "/proc/${PID}/ns/net" "/run/netns/${CONTAINER_NAME}"
 }
 
