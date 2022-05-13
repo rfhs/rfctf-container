@@ -48,7 +48,7 @@ for phy in ${CONTAINER_PHYS}; do
   sudo iw phy "${phy}" set netns "${clientpid}"
 done
 sleep 90
-if docker exec -it "${CONTAINER_NAME}" 'bash -x ./ldm_checker --test'; then
+if docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
   docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push "rfhs/${DISTRO}:${VERS}"
