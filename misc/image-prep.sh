@@ -20,15 +20,19 @@ if [ -n "$(docker images | grep "<none>" | awk '{print $3}')" ]; then
 fi
 
 # cleanup unneeded gentoo files leftover from upgrading
-rm -rf "$(portageq envvar DISTDIR)"/*
-rm -rf "$(portageq envvar PKGDIR)"/*
+if [ -x "$(command -v portageq 2>&1)" ]; then
+  rm -rf "$(portageq envvar DISTDIR)"/*
+  rm -rf "$(portageq envvar PKGDIR)"/*
+fi
 
 # ensure shared-persistent_storage is empty
-rm -rf /var/wctf/shared_persistent_storage/*
+if [ -d '/var/wctf/shared_persistent_storage/*' ]; then
+  rm -rf /var/wctf/shared_persistent_storage/*
+fi
 
 #wipe all the container logs
-find /var/wctf/contestant/ -type f -not -name authorized_keys -exec rm -rf {} \;
-find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
+[ -d '/var/wctf/contestant' ] && find /var/wctf/contestant/ -type f -not -name authorized_keys -exec rm -rf {} \;
+[ -d '/var/log/rfhs-rfctf' ] && find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
 
 # clean cloud init
-cloud-init clean
+[ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
