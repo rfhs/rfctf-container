@@ -28,13 +28,13 @@ This script starts the openwrt container which runs the Access Point half of the
 It does not verify the capabilities of your physical wifi cards, you are expected to provide 802.11n/Wifi4 or newer wifi cards which support at least 4 APs each.  You can check with `iw list | grep -A2 'combinations'`.
 Good example (supports 2048 ssids):
 ```
-	valid interface combinations:
-		 * #{ IBSS } <= 1, #{ managed, AP, mesh point, P2P-client, P2P-GO } <= 2048, #{ P2P-device } <= 1,
+valid interface combinations:
+	 * #{ IBSS } <= 1, #{ managed, AP, mesh point, P2P-client, P2P-GO } <= 2048, #{ P2P-device } <= 1,
 ```
 Bad example (supports 1 ssid):
 ```
-	valid interface combinations:
-		 * #{ managed } <= 1, #{ AP, P2P-client, P2P-GO } <= 1, #{ P2P-device } <= 1,
+valid interface combinations:
+	 * #{ managed } <= 1, #{ AP, P2P-client, P2P-GO } <= 1, #{ P2P-device } <= 1,
 ```
 
 ### 02_rfctf-client.start
