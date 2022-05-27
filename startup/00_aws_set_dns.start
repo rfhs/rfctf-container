@@ -1,18 +1,22 @@
 #!/bin/bash
 
-# Retrieve a token for subsequent requests
-TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
+if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+  # Retrieve a token for subsequent requests
+  TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
 
-# Extract information about the Instance
-INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/instance-id/)
-AZ=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
-MY_IP=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/public-ipv4/)
+  # Extract information about the Instance
+  INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/instance-id/)
+  AZ=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
+  MY_IP=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/public-ipv4/)
 
-DOCUMENT=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance)
+  #DOCUMENT=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance)
 
-# Extract tags associated with instance
-ZONE_TAG=$(aws ec2 describe-tags --region ${AZ::-1} --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`HOSTED_ZONE`].Value' --output text)
-NAME_TAG=$(aws ec2 describe-tags --region ${AZ::-1} --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`Name`].Value' --output text)
+  # Extract tags associated with instance
+  ZONE_TAG=$(aws ec2 describe-tags --region "${AZ::-1}" --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`HOSTED_ZONE`].Value' --output text)
+  NAME_TAG=$(aws ec2 describe-tags --region "${AZ::-1}" --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`Name`].Value' --output text)
 
-# Update Route 53 Record Set based on the Name tag to the current Public IP address of the Instance
-aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_TAG} --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"'${NAME_TAG}'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'${MY_IP}'"}]}}]}'
+  # Update Route 53 Record Set based on the Name tag to the current Public IP address of the Instance
+  aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_TAG}" --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"'${NAME_TAG}'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'${MY_IP}'"}]}}]}'
+else
+  printf "This script is used by RFHS for setting dns automatically in AWS.  It is not useful outside of AWS at this time.\n"
+fi
