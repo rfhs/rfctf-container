@@ -9,4 +9,4 @@ export CONTAINER_NETWORKS="contestant"
 export SSH_PORT="2201"
 export VNC_PORT="8801"
 
-./rfhs-container-init
+./"$(dirname "${0}")"/rfhs-container-init
