@@ -8,4 +8,4 @@ CONTAINER_PHYS="$(seq 10 25)"
 export CONTAINER_PHYS
 export CONTAINER_NETWORKS=""
 
-./"$(dirname "${0}")"/rfhs-container-init
+"$(dirname "${0}")"/rfhs-container-init

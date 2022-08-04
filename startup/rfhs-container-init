@@ -43,7 +43,7 @@ done
 
 if [ -n "${PHY_ERR}" ]; then
 	echo "Fixing phy interfaces with ./fix_phy.sh"
-	FIX_PHY=1 ./"$(dirname "${0}")"/fixphy.sh
+	FIX_PHY=1 "$(dirname "${0}")"/fixphy.sh
 fi
 
 [ ! -d "/var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
@@ -103,7 +103,7 @@ else
   fi
 fi
 
-./"$(dirname "${0}")"/namespace_fixup.sh "${CONTAINER_NAME}"
+"$(dirname "${0}")"/namespace_fixup.sh "${CONTAINER_NAME}"
 
 clientpid=$(docker inspect --format "{{ .State.Pid }}" "${CONTAINER_NAME}")
 for phy_num in ${CONTAINER_PHYS}; do
