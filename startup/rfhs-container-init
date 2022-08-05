@@ -67,6 +67,7 @@ else
       --cap-add net_raw --cap-add net_admin \
       -v /var/cache/rfhs-rfctf/shared_persistent_storage:/root/shared_persistent_storage \
       $(if [ -d '/root/wctf-restricted' ]; then find '/root/wctf-restricted/wifi/openwrt/airkraken/files' -type f -exec printf "-v %s:%s\n" "{}" "{}" \; | sed 's#:/root/wctf-restricted/wifi/openwrt/airkraken/files#:#;s#$#:ro#'; fi) \
+      $(if [ -d '/root/wctf-restricted' ]; then find '/root/wctf-restricted/wifi/openwrt/airkraken/files' -type l -exec printf "-v %s:%s\n" "{}" "{}" \; | sed 's#:/root/wctf-restricted/wifi/openwrt/airkraken/files#:#;s#$#:ro#'; fi) \
       -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
       "${CONTAINER_IMAGE}"
       #--privileged --userns host \
