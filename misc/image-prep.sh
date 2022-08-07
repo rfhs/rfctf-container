@@ -23,6 +23,7 @@ fi
 if [ -x "$(command -v portageq 2>&1)" ]; then
   rm -rf "$(portageq envvar DISTDIR)"/*
   rm -rf "$(portageq envvar PKGDIR)"/*
+  rm -rf "$(portageq envvar PORTAGE_TMPDIR)"/portage/*
 fi
 
 # ensure shared-persistent_storage is empty
