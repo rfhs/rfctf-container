@@ -32,7 +32,7 @@ EXPOSE 8080/tcp
 ENV DISPLAY=:0
 
 WORKDIR /root/
-COPY files/wigle.words /root/wigle.words
+COPY files/fava_beans.words /root/fava_beans.words
 COPY files/supervisord-debianish.conf /etc/supervisord/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
