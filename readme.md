@@ -22,7 +22,7 @@ Used by RFHS to set per player dns in our AWS environment.  You don't need to ru
 ### 00_radio_init.start
 When running a virtual game, this sets up and configures the virtual wifi radios.  If you want to run a physical game, and have the required "ton" of wifi interfaces, skip this step.
 
-## The following scripts set up the challenges themselves and expect "fixphy.sh", "namespace_fixup.sh", and "rfhs-container-init" to be in the same directory.
+## The following scripts set up the challenges themselves and expect "fixphy.sh" and "rfhs-container-init" to be in the same directory.
 ### 01_openwrt.start
 This script starts the openwrt container which runs the Access Point half of the wifi challenges.  It uses the virtual wifi cards created by 00_radio_init.start OR physical wifi cards available in the system.
 It does not verify the capabilities of your physical wifi cards, you are expected to provide 802.11n/Wifi4 or newer wifi cards which support at least 4 APs each.  You can check with `iw list | grep -A2 'combinations'`.
@@ -40,7 +40,7 @@ valid interface combinations:
 ### 02_rfctf-client.start
 This script starts the rfctf-client container which runs the wifi client half of the wifi challenges.  If uses the virtual wifi cards created by 00_radio_init.start OR physical wifi cards available in the system.
 
-## The following scripts set up the contestant containers and expect "fixphy.sh", "namespace_fixup.sh", and "rfhs-container-init" to be in the same directory
+## The following scripts set up the contestant containers and expect "fixphy.sh" and "rfhs-container-init" to be in the same directory
 These scripts should not by used for physical games (contestants use their own computers)
 
 ### 03_pentoo-contestant.start
