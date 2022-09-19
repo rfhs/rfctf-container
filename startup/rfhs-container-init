@@ -138,3 +138,11 @@ if [ -n "${CONTAINER_PHYS}" ]; then
     iw phy "phy${phy_num}" set netns name "${CONTAINER_NAME}"
   done
 fi
+
+if [ "${CONTAINER_NAME}" = "openwrt" ]; then
+  if [ -x /root/wctf-restricted/wifi/openwrt/airkraken/secret-sauce.sh ]; then
+    printf "Sleeping before running the secret-sauce...\n"
+    sleep 30
+    /root/wctf-restricted/wifi/openwrt/airkraken/secret-sauce.sh
+  fi
+fi
