@@ -3,7 +3,7 @@ set -e
 VERS="0.24"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
-docker buildx build --allow security.insecure . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 if [ "$(hostname)" = "Nu" ] ; then
   docker push rfhs/${DISTRO}

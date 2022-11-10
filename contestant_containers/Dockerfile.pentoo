@@ -4,13 +4,12 @@ ADD portage_and_overlay.tar.xz /
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
   #sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf && \
   # --security=insecure is only needed for go
-RUN --security=insecure sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
+RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   echo 'pentoo/pentoo-wireless pentoo-full' >> /etc/portage/profile/package.use/pentoo && \
   echo 'pentoo/pentoo-radio -bladerf -bluetooth -hackrf -limesdr -plutosdr -rtlsdr' >> /etc/portage/profile/package.use/pentoo && \
   echo 'xfce-base/xfce4-meta -upower' >> /etc/portage/profile/package.use/pentoo && \
-  #echo 'net-wireless/gqrx gr-audio' >> /etc/portage/profile/package.use/pentoo && \
   # go is needed for termshark but has a dep loop
-  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot && \
+  emerge --getbinpkgonly=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot && \
   # install binary web browsers so they are preferred
   echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf && \
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot && \
