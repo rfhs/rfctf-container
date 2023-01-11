@@ -26,7 +26,7 @@ RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   # install the additional packages we want, missing gr-lora_sdr and nrsc5
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc app-crypt/hashcat net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
   # also depclean bdeps and deps
-  emerge --depclean --with-bdeps=n && \
+  emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/*
 RUN \
