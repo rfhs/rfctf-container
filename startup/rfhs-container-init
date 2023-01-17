@@ -61,8 +61,21 @@ if [ -n "${PHY_ERR}" ]; then
 	FIX_PHY=1 "$(dirname "${0}")"/fixphy.sh
 fi
 
-[ ! -d "/var/log/rfhs-rfctf/${CONTAINER_NAME}" ] && mkdir -p "/var/log/rfhs-rfctf/${CONTAINER_NAME}"
-[ ! -d "/var/cache/rfhs-rfctf/shared_persistent_storage" ] && mkdir -p "/var/cache/rfhs-rfctf/shared_persistent_storage"
+# Create/fix log directory
+LOG_DIR="/var/log/rfhs-rfctf/${CONTAINER_NAME}"
+[ ! -d "${LOG_DIR" ] && mkdir -p "${LOG_DIR}"
+# docker user namespace maps 0 to 231072
+if [ "$(stat -c "%u" "${LOG_DIR}")" != "231072" ] || [ "$(stat -c "%g" "${LOG_DIR}" != "231072" ]; then
+  chown 231072:231072 "${LOG_DIR}"
+fi
+
+# Create/fix shared_persistent_storage directory
+sps='/var/cache/rfhs-rfctf/shared_persistent_storage'
+[ ! -d "${sps}" ] && mkdir -p "${sps}"
+# docker user namespace maps 0 to 231072
+if [ "$(stat -c "%u" "${sps}")" != "231072" ] || [ "$(stat -c "%g" "${sps}" != "231072" ]; then
+  chown 231072:231072 "${sps}"
+fi
 
 if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
   # shellcheck disable=SC2046
