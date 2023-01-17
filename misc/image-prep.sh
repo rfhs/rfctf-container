@@ -19,6 +19,7 @@ fi
 
 # pull latest images for everything
 for image in $(docker image ls | grep '^rfhs' | awk '{print $1}'); do
+  cleanup_docker
   docker pull "${image}"
   cleanup_docker
 done
