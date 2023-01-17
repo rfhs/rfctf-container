@@ -63,7 +63,7 @@ fi
 
 # Create/fix log directory
 LOG_DIR="/var/log/rfhs-rfctf/${CONTAINER_NAME}"
-[ ! -d "${LOG_DIR" ] && mkdir -p "${LOG_DIR}"
+[ ! -d "${LOG_DIR}" ] && mkdir -p "${LOG_DIR}"
 # docker user namespace maps 0 to 231072
 if [ "$(stat -c "%u" "${LOG_DIR}")" != "231072" ] || [ "$(stat -c "%g" "${LOG_DIR}")" != "231072" ]; then
   chown 231072:231072 "${LOG_DIR}"
