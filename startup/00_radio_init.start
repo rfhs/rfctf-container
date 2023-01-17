@@ -8,7 +8,11 @@ set -eu -o pipefail
 if lsmod | grep -q mac80211_hwsim; then
   printf "Resetting magic pretend wifi cards...\n"
   modprobe -r mac80211_hwsim
-  sleep 5
+  if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+    sleep 2
+    modprobe -r cfg80211
+  fi
+  sleep 2
 fi
 
 printf "Making a bunch of magic pretend wifi cards...\n"
