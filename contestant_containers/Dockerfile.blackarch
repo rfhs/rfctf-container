@@ -27,7 +27,7 @@ RUN pacman -Syu --noconfirm make && \
     sed -i 's/backgrounds\/blackarch.png/blackarch\/wallpaper.png/g' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml && \
     # Copy BlackArch configs
     cp -r /etc/skel/. /root/. && \
-    rm -rf /var/cache/pacman/pkg/*
+    pacman -Scc
 
 # Expose needed ports
 EXPOSE 22/tcp
