@@ -6,8 +6,11 @@ set -eu -o pipefail
 #this means all containers will lose their virtual radios
 
 if lsmod | grep -q mac80211_hwsim; then
+  printf "Resetting magic pretend wifi cards...\n"
   modprobe -r mac80211_hwsim
   sleep 5
 fi
 
-modprobe mac80211_hwsim radios=43 channels=10
+printf "Making a bunch of magic pretend wifi cards...\n"
+modprobe mac80211_hwsim radios=60 channels=35
+sleep 10

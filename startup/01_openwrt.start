@@ -9,4 +9,13 @@ export CONTAINER_PHYS
 #container_networks can't really be changed right now as some of it is hardcoded in contestant-init
 export CONTAINER_NETWORKS="openwrt-eth0 openwrt-eth1"
 
+if [ "$(awk -F. '{print $1}' /proc/uptime)" -lt 60 ]; then
+  sleepy_tyme=$(( 60 - $(awk -F. '{print $1}' /proc/uptime) ))
+  printf "System boot still very fresh, sleeping for %s seconds before starting openwrt...\n" "${sleepy_tyme}"
+  sleep "${sleepy_tyme}"
+fi
+
 "$(dirname "${0}")"/rfhs-container-init
+
+printf "${CONTAINER_NAME} takes time to start, sleeping 2 minutes...\n"
+sleep 2m
