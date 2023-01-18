@@ -147,7 +147,6 @@ if [ -n "${CONTAINER_PHYS}" ]; then
       printf "Unable to find phy%s, waiting...\n" "${phy_num}"
       sleep 1
     done
-    #iw phy "phy${phy_num}" set netns "${clientpid}"
     iw phy "phy${phy_num}" set netns name "${CONTAINER_NAME}"
   done
 fi
