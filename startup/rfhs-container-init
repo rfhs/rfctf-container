@@ -92,13 +92,13 @@ else
     # shellcheck disable=SC2046
     docker create -it --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
-      --cap-add net_raw --cap-add net_admin \
       -v /var/cache/rfhs-rfctf/shared_persistent_storage:/root/shared_persistent_storage \
       $(if [ -d '/root/wctf-restricted' ]; then find '/root/wctf-restricted/wifi/openwrt/airkraken/files' -type f ! -path '*shared_persistent_storage*' -exec printf "-v %s:%s\n" "{}" "{}" \; | sed 's#:/root/wctf-restricted/wifi/openwrt/airkraken/files#:#;s#$#:ro#'; fi) \
       $(if [ -d '/root/wctf-restricted' ]; then find '/root/wctf-restricted/wifi/openwrt/airkraken/files' -type l -exec printf "-v %s:%s\n" "{}" "{}" \; | sed 's#:/root/wctf-restricted/wifi/openwrt/airkraken/files#:#;s#$#:ro#'; fi) \
       -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
+      --privileged --userns host \
       "${CONTAINER_IMAGE}"
-      #--privileged --userns host \
+      #--cap-add net_raw --cap-add net_admin \
       # XXX need to do bridge aging outside the container to not require privileged
 
     docker network connect openwrt-eth1 "${CONTAINER_NAME}"
