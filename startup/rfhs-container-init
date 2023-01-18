@@ -112,7 +112,7 @@ else
         --privileged --userns host \
         $([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/config:/root/leeloodallasmultipass/config\n') \
         $([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/helpers:/root/leeloodallasmultipass/helpers\n') \
-        $([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf\n') \
+        $([ -d '/root/wctf-restricted' ] && ([ -f '/sys/devices/virtual/dmi/id/board_vendor' ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ] && printf -- '-v /root/wctf-restricted/wifi/leeloodallasmultipass/ldm-virtual.conf:/root/leeloodallasmultipass/ldm.conf\n' || printf '/root/wctf-restricted/wifi/leeloodallasmultipass/ldm.conf:/root/leeloodallasmultipass/ldm.conf\n')) \
         -v /var/cache/rfhs-rfctf/shared_persistent_storage:/root/shared_persistent_storage \
         -v "/var/log/rfhs-rfctf/${CONTAINER_NAME}":/var/log \
         "${CONTAINER_IMAGE}"
