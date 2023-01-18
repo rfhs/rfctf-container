@@ -4,7 +4,7 @@ export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="parrot-contestant"
 export CONTAINER_IMAGE="rfhs/parrot"
-export CONTAINER_PHYS="34 35 36 37"
+export CONTAINER_PHYS="$(seq 38 41)"
 export CONTAINER_NETWORKS="contestant"
 export SSH_PORT="2203"
 export VNC_PORT="8803"
