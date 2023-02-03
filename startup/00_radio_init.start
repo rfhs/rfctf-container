@@ -6,10 +6,14 @@ set -eu -o pipefail
 #this means all containers will lose their virtual radios
 
 is_vm() {
-  if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ]; then
-    [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ] && return 0 # Amazon EC2
-    [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Oracle Corporation' ] && return 0 # Virtualbox
+  if [ -r "/sys/devices/virtual/dmi/id/sys_vendor" ]; then
+    [ "$(cat /sys/devices/virtual/dmi/id/sys_vendor)" = 'Amazon EC2' ] && return 0 # Amazon EC2
+    [ "$(cat /sys/devices/virtual/dmi/id/sys_vendor)" = 'innotek GmbH' ] && return 0 # Virtualbox
+    [ "$(cat /sys/devices/virtual/dmi/id/sys_vendor)" = 'QEMU' ] && return 0 # QEMU
+    [ "$(cat /sys/devices/virtual/dmi/id/sys_vendor)" = 'VMware, Inc.' ] && return 0 # VMware
+    [ "$(cat /sys/devices/virtual/dmi/id/sys_vendor)" = 'Xen' ] && return 0 # Xen
   fi
+  return 1
 }
 
 if lsmod | grep -q mac80211_hwsim; then
