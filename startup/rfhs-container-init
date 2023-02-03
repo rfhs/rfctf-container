@@ -142,8 +142,17 @@ if [ -n "${CONTAINER_PHYS}" ]; then
   for phy_num in ${CONTAINER_PHYS}; do
     while true; do
       if iw phy "phy${phy_num}" info > /dev/null 2>&1; then
-        printf "Found phy%s, moving it into %s\n" "${phy_num}" "${CONTAINER_NAME}"
-        break
+        # This commented code would protect users from accidently pulling their physical wifi cards
+        # into the virtual game environment.  Unfortunately it also breaks the ability to run a physical game.
+        #unset driver
+        #driver="$(awk -F'=' '{print $2}' "/sys/class/ieee80211/phy${phy_num}/device/uevent")"
+        #if [ 'mac80211_hwsim' = "${driver}" ]; then
+          printf "Found phy%s, moving it into %s\n" "${phy_num}" "${CONTAINER_NAME}"
+          break
+        #else
+        #  printf "Requested phy is using %s driver instead of the expected mac80211_hwsim.  Failing safe.\n" "${driver}"
+        #  exit 1
+        #fi
       fi
       printf "Unable to find phy%s, waiting...\n" "${phy_num}"
       sleep 1
