@@ -7,7 +7,7 @@ if [ -n "${DEBUG}" ]; then
 	set -x
 fi
 
-source "$(dirname "${0}")"/rfhs-helpers.sh
+. "$(dirname "${0}")"/rfhs-helpers.sh
 
 create_ns_link() {
   # Set the name for the namespace
