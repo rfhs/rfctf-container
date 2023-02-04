@@ -1,11 +1,11 @@
-#!/bin/bash -x
-set -eu -o pipefail
+#!/bin/sh
+set -eux
 
 #this script configures the virtual radios
 #if this script re-runs it will remove all radios and reinitialize them
 #this means all containers will lose their virtual radios
 
-source "$(dirname "${0}")"/rfhs-helpers.sh
+. "$(dirname "${0}")"/rfhs-helpers.sh
 
 if lsmod | grep -q mac80211_hwsim; then
   printf "Resetting magic pretend wifi cards...\n"
