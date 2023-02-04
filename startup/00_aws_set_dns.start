@@ -16,7 +16,7 @@ if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/vi
   NAME_TAG=$(aws ec2 describe-tags --region "${AZ::-1}" --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`Name`].Value' --output text)
 
   # Update Route 53 Record Set based on the Name tag to the current Public IP address of the Instance
-  aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_TAG}" --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"'${NAME_TAG}'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'${MY_IP}'"}]}}]}'
+  aws route53 change-resource-record-sets --hosted-zone-id "${ZONE_TAG}" --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"'"${NAME_TAG}"'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'"${MY_IP}"'"}]}}]}'
 else
   printf "This script is used by RFHS for setting dns automatically in AWS.  It is not useful outside of AWS at this time.\n"
 fi
