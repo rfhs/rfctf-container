@@ -17,6 +17,12 @@ RUN sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && 
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
+# setup challengectl
+ADD "https://api.github.com/repos/rfhs/challengectl/commits?per_page=1" latest_commit
+RUN cd /root/ && \
+  git clone https://github.com/rfhs/challengectl.git && \
+  # rm all the files we don't want
+  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
 WORKDIR /root/challengectl/
 CMD ["/bin/bash"]
 ENTRYPOINT []
