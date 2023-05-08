@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.24"
+VERS="0.25"
 DISTRO="parrot"
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
