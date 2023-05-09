@@ -9,6 +9,12 @@ fi
 
 . "$(dirname "${0}")"/rfhs-helpers.sh
 
+f_exit() {
+  exit 1
+}
+
+trap f_exit INT KILL
+
 create_ns_link() {
   # Set the name for the namespace
   PID="$(docker inspect -f '{{.State.Pid}}' "${CONTAINER_NAME}")"
