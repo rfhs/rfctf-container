@@ -13,7 +13,7 @@ f_exit() {
   exit 1
 }
 
-trap f_exit INT KILL
+trap f_exit INT
 
 create_ns_link() {
   # Set the name for the namespace
