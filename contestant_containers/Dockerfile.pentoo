@@ -7,6 +7,8 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
 RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   echo 'pentoo/pentoo-wireless pentoo-full' >> /etc/portage/profile/package.use/pentoo && \
   echo 'pentoo/pentoo-radio -bladerf -bluetooth -hackrf -limesdr -plutosdr -rtlsdr' >> /etc/portage/profile/package.use/pentoo && \
+  # temporarily dropping opencl from wifite to avoid hashcat
+  echo 'net-wireless/wifite -opencl' >> /etc/portage/profile/package.use/net-wireless && \
   echo 'xfce-base/xfce4-meta -upower' >> /etc/portage/profile/package.use/pentoo && \
   # go is needed for termshark but has a dep loop
   emerge --getbinpkgonly=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot && \
