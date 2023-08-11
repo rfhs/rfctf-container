@@ -134,7 +134,6 @@ else
         $([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/sdr/challengectl_flags/current_conf.csv:/root/challengectl/current_conf.csv\n') \
         $([ -d '/root/wctf-restricted' ] && printf -- '-v /root/wctf-restricted/sdr/simple_sdr_challenge_runner/challenges/current_conf:/root/challengectl/challenges/current_conf\n') \
         -v /dev:/dev \
-        -v /root/challengectl:/root/challengectl \
         -v "${sps}":/root/shared_persistent_storage -v "${LOG_DIR}":/var/log \
         "${CONTAINER_IMAGE}" ./challengectl.py current_conf.csv devices.txt.rfhs
     fi
