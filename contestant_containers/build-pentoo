@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.25"
+VERS="0.26"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}

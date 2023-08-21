@@ -29,8 +29,8 @@ RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   # install the distro opencl stuff because gentoo is weird
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse dev-libs/pocl --oneshot && \
   emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/pentoo-opencl && \
-  # install the additional packages we want, missing gr-lora_sdr and nrsc5; had to remove app-crypt/hashcat and net-wireless/urh due to build failure
-  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx && \
+  # install the additional packages we want, missing gr-lora_sdr and nrsc5; had to remove app-crypt/hashcat due to build failure
+  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx net-wireless/urh && \
   # also depclean bdeps and deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
