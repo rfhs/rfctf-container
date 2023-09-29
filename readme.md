@@ -6,7 +6,7 @@ To start using follow these basic steps:
 Clone this repo and enter the directory
 ```
 git clone https://github.com/rfhs/rfctf-container
-cd rf-ctfcontainer
+cd rfctf-container
 ```
 
 The actual challenges are all run from docker containers.  The build files are all included in this repo, however, to simply run a game, you want to enter the "startup" directory.
