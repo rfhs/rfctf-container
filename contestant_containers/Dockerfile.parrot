@@ -1,18 +1,12 @@
 FROM docker.io/parrotsec/core
 RUN \
-  # https://www.parrotsec.org/docs/mirrors/mirrors-list
-  echo 'deb https://deb.parrot.sh/parrot parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb https://mirrors.aliyun.com/parrot parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb http://mirrors.mit.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb https://mirror.clarkson.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb https://mirror.math.princeton.edu/pub/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb https://ftp.osuosl.org/pub/parrotos parrot main contrib non-free' >> /etc/apt/sources.list && \
-  echo 'deb https://mirrors.ocf.berkeley.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
-  # missing urh, gr-lora_sdr nrsc5
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap freeradius-wpe hostapd-mana iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim mlocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc parrot-desktop-xfce dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr -y --allow-remove-essential && \
+  # missing parrot-desktop-xfce kismet, urh, gr-lora_sdr nrsc5
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap freeradius-wpe hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim mlocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr -y --allow-remove-essential && \
+  # hack around broken metapackages for kismet and parrot-desktop-xfce
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends xfce4 kismet-core kismet-doc kismet-logtools kismet-capture-linux-wifi -y --allow-remove-essential && \
   # dpkg -P --force-depends xfce4-power-manager-plugins && \
   # rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml && \
   # sed -i '/power-manager-plugin/d' /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
