@@ -1,11 +1,26 @@
 #!/bin/sh
 set -e
-VERS="0.25"
+VERS="0.27"
 DISTRO="parrot"
 docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
-if [ "$(hostname)" = "Nu" ] ; then
-  docker push rfhs/${DISTRO}
-  docker push rfhs/${DISTRO}:${VERS}
-  docker push rfhs/${DISTRO}:latest
+docker run -itd --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
+sleep 30
+if docker exec -it "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker; then
+  docker stop "rfhs-${DISTRO}-ci"
+  if [ "$(hostname)" = "Nu" ] ; then
+    docker push rfhs/${DISTRO}
+    docker push rfhs/${DISTRO}:${VERS}
+    docker push rfhs/${DISTRO}:latest
+  fi
+  exit_code=0
+else
+  if [ "$(hostname)" = "Nu" ] ; then
+    printf "contestant-checker failed!\n"
+    docker stop "rfhs-${DISTRO}-ci"
+  else
+    printf "contestant-checker failed, rfhs-%s-ci is still running for debugging...\n" "${DISTRO}"
+  fi
+  exit_code=1
 fi
+exit ${exit_code}

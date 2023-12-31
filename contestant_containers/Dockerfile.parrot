@@ -1,5 +1,13 @@
 FROM docker.io/parrotsec/core
-RUN sed -i 's#https://deb.parrot.sh/parrot#https://ftp.osuosl.org/pub/parrotos#g' /etc/apt/sources.list && \
+RUN \
+  # https://www.parrotsec.org/docs/mirrors/mirrors-list
+  echo 'deb https://deb.parrot.sh/parrot parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb https://mirrors.aliyun.com/parrot parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb http://mirrors.mit.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb https://mirror.clarkson.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb https://mirror.math.princeton.edu/pub/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb https://ftp.osuosl.org/pub/parrotos parrot main contrib non-free' >> /etc/apt/sources.list && \
+  echo 'deb https://mirrors.ocf.berkeley.edu/parrot/ parrot main contrib non-free' >> /etc/apt/sources.list && \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
@@ -27,12 +35,19 @@ RUN sed -i 's#https://deb.parrot.sh/parrot#https://ftp.osuosl.org/pub/parrotos#g
   cd /etc/hostapd-mana/certs && \
   rm ca.pem csr.csr dhparam.pem server.key server.pem
 
+# Expose needed ports
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
+
+# Set operable environment
 ENV DISPLAY=:0
 
-WORKDIR /root/
 COPY files/fava_beans.words /root/fava_beans.words
 COPY files/supervisord-debianish.conf /etc/supervisord/supervisord.conf
+COPY files/contestant-checker /usr/local/sbin/contestant-checker
+
+WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
+
+HEALTHCHECK --interval=60s --start-period=30s --retries=2 CMD /usr/local/sbin/contestant-checker

@@ -19,6 +19,8 @@ RUN pacman -Syu --noconfirm make && \
     blackarch-config-cursor blackarch-config-icons blackarch-config-zsh ttf-liberation hostapd freeradius wpa_supplicant bully \
     wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools \
     hcxdumptool wifi-honey tcpdump nmap gnuradio gqrx gnuradio-osmosdr urh firefox && \
+    # https://github.com/BlackArch/blackarch/issues/4049
+    pacman -Syu --noconfirm which inetutils && \
     # Uninstall broken package
     pacman -R --noconfirm xfce4-power-manager && \
     # Clean up environment
@@ -38,7 +40,10 @@ ENV DISPLAY=:0
 
 COPY files/fava_beans.words /root/fava_beans.words
 COPY files/supervisord-blackarch.conf /etc/supervisor/conf.d/supervisord.conf
+COPY files/contestant-checker /usr/local/sbin/contestant-checker
 
 WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
+
+HEALTHCHECK --interval=60s --start-period=30s --retries=2 CMD /usr/local/sbin/contestant-checker

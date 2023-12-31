@@ -47,12 +47,19 @@ RUN \
   # make sure the menus exist
   genmenu.py -x
 
+# Expose needed ports
 EXPOSE 22/tcp
 EXPOSE 8080/tcp
+
+# Set operable environment
 ENV DISPLAY=:0
 
-WORKDIR /root/
 COPY files/fava_beans.words /root/fava_beans.words
 COPY files/supervisord-pentoo.conf /etc/supervisord/supervisord.conf
+COPY files/contestant-checker /usr/local/sbin/contestant-checker
+
+WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
+
+HEALTHCHECK --interval=60s --start-period=30s --retries=2 CMD /usr/local/sbin/contestant-checker
