@@ -15,7 +15,7 @@ set -eu
 # Next we check runtime services think they are running
 for running in X11 novnc sshd x11vnc xfce; do
   if [ "$(supervisorctl status ${running} | awk '{print $2}')" != "RUNNING" ]; then
-    printf "Something is wrong with service %s\n" "${running}"
+    printf 'Something is wrong with service %s\n' "${running}"
     supervisorctl status | tee -a /root/HEALTHCHECK_DEGRADED
     if [ -x "$(command -v notify-send 2>&1)" ]; then
       notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
@@ -27,7 +27,7 @@ done
 # Then we check the expected listening ports are actually listening
 for port in 22 8080; do
   if ! ss -nlt | grep -q "0.0.0.0:${port}"; then
-    printf "Nothing is listening on port %s\n" "${port}" | tee /root/HEALTHCHECK_DEGRADED
+    printf 'Nothing is listening on port %s\n' "${port}" | tee /root/HEALTHCHECK_DEGRADED
     ss -nltp | tee -a /root/HEALTHCHECK_DEGRADED
     if [ -x "$(command -v notify-send 2>&1)" ]; then
       notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
@@ -40,7 +40,7 @@ printf "Everything looks good.\n"
 if [ -f "/root/HEALTHCHECK_DEGRADED" ]; then
   rm /root/HEALTHCHECK_DEGRADED
   if [ -x "$(command -v notify-send 2>&1)" ]; then
-    notify-send 'Healthcheck' "Recovered" --icon=dialog-information
+    notify-send 'Healthcheck' 'Recovered' --icon=dialog-information
   fi
 fi
 true
