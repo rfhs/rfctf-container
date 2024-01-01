@@ -2,7 +2,7 @@
 set -e
 VERS="0.27"
 DISTRO="parrot"
-docker build . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker build --no-cache . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 docker run -itd --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
 sleep 30
