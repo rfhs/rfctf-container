@@ -16,7 +16,7 @@ EMAIL=rfarina@rfhackers.com
 /bin/sed -i "s/server_name.*/server_name $HOSTNAME;/" files/nginx.conf
 /bin/sed -i "s/server_name.*/server_name $HOSTNAME;/" files/sslnginx.conf
 
-echo "<HTML><BODY><a href="https://$HOSTNAME:8443/vnc.html">Open Pentoo</a><br><a href="https://$HOSTNAME:8444/vnc.html">Open Kali Linux</a><br><a href="https://$HOSTNAME:8445/vnc.html">Open Parrot</a><br><a href="https://$HOSTNAME:8446/vnc.html">Open Blackarch</a></BODY></HTML>" > files/index.html
+echo "<HTML><meta http-equiv="Content-Language" content="en"><BODY><a href="https://$HOSTNAME:8443/vnc.html">Open Pentoo</a><br><a href="https://$HOSTNAME:8444/vnc.html">Open Kali Linux</a><br><a href="https://$HOSTNAME:8445/vnc.html">Open Parrot</a><br><a href="https://$HOSTNAME:8446/vnc.html">Open Blackarch</a></BODY></HTML>" > files/index.html
 
 docker build -t rfhs/nginx -f Dockerfile.nginx .
 
