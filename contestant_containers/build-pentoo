@@ -1,13 +1,16 @@
 #!/bin/sh
 set -e
-VERS="0.27"
+VERS="0.28"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
+if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
+	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
+	exit 1
+fi
 docker build --no-cache . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 docker run -itd --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
-sleep 30
-if docker exec -it "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker; then
+if docker exec -it "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push rfhs/${DISTRO}

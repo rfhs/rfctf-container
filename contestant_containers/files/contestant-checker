@@ -2,6 +2,26 @@
 
 set -eu
 
+# Check for required packages/commands being installed
+if [ "${1:-}" = "excessive" ]; then
+  if [ ! -x "$(command -v notify-send 2>&1)" ]; then
+    printf 'notify-send required but not found\n'
+    exit 1
+  fi
+  if [ ! -x "$(command -v supervisorctl 2>&1)" ]; then
+    printf 'supervisorctl required but not found\n'
+    exit 1
+  fi
+  if [ ! -x "$(command -v aircrack-ng 2>&1)" ]; then
+    printf 'aircrack-ng required but not found\n'
+    exit 1
+  else
+    printf 'Testing aircrack-ng for 30 seconds...\n'
+    nice -n 19 aircrack-ng -S -Z 30
+    printf 'Test passed\n'
+  fi
+fi
+
 # First we check startup services worked
 # Or we would, except EXITED looks the same success or failure so there is no point
 # In this case it's safe, because ssh won't come up unless these two succeeded
@@ -17,9 +37,7 @@ for running in X11 novnc sshd x11vnc xfce; do
   if [ "$(supervisorctl status ${running} | awk '{print $2}')" != "RUNNING" ]; then
     printf 'Something is wrong with service %s\n' "${running}"
     supervisorctl status | tee -a /root/HEALTHCHECK_DEGRADED
-    if [ -x "$(command -v notify-send 2>&1)" ]; then
-      notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
-    fi
+    notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
     exit 1
   fi
 done
@@ -29,9 +47,7 @@ for port in 22 8080; do
   if ! ss -nlt | grep -q "0.0.0.0:${port}"; then
     printf 'Nothing is listening on port %s\n' "${port}" | tee /root/HEALTHCHECK_DEGRADED
     ss -nltp | tee -a /root/HEALTHCHECK_DEGRADED
-    if [ -x "$(command -v notify-send 2>&1)" ]; then
-      notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
-    fi
+    notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error
     exit 1
   fi
 done
@@ -39,8 +55,6 @@ done
 printf "Everything looks good.\n"
 if [ -f "/root/HEALTHCHECK_DEGRADED" ]; then
   rm /root/HEALTHCHECK_DEGRADED
-  if [ -x "$(command -v notify-send 2>&1)" ]; then
-    notify-send 'Healthcheck' 'Recovered' --icon=dialog-information
-  fi
+  notify-send 'Healthcheck' 'Recovered' --icon=dialog-information
 fi
 true

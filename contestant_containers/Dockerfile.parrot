@@ -4,22 +4,9 @@ RUN \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
   # missing parrot-desktop-xfce kismet, urh, gr-lora_sdr nrsc5
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap freeradius-wpe hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim mlocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr -y --allow-remove-essential && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap freeradius-wpe hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim mlocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin -y --allow-remove-essential && \
   # hack around broken metapackages for kismet and parrot-desktop-xfce
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends xfce4 kismet-core kismet-doc kismet-logtools kismet-capture-linux-wifi -y --allow-remove-essential && \
-  # dpkg -P --force-depends xfce4-power-manager-plugins && \
-  # rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml && \
-  # sed -i '/power-manager-plugin/d' /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
-  # DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y equivs && \
-  # equivs-control xfce4-power-manager-plugins && \
-  # sed -i "s/Package:.*/Package: xfce4-power-manager-plugins/" xfce4-power-manager-plugins && \
-  # sed -i "s/^# Version:.*/Version: 1:4.16.0-1/" xfce4-power-manager-plugins && \
-  # equivs-build xfce4-power-manager-plugins && \
-  # mv ./xfce4-power-manager-plugins_4.16.0-1_all.deb /tmp/ && \
-  # chmod 666 /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  # apt-get -o Dpkg::Options::="--force-confnew" install -y /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  # rm /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
-  # apt-get purge -y equivs && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \

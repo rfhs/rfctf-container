@@ -1,25 +1,16 @@
 FROM docker.io/blackarchlinux/blackarch:latest
 
-# Temporary patch to build on Ubuntu 20.04/10 & GitHub CI
-# https://bugs.archlinux.org/index.php?do=details&task_id=69563
-#
-# Uncomment this run if you get a near immediate failure saying :
-# error: failed to initialize alpm library
-# (could not find or read directory: /var/lib/pacman/)
-#
-#RUN patched_glibc=glibc-linux4-2.33-4-x86_64.pkg.tar.zst && \
-#    curl -LO "https://repo.archlinuxcn.org/x86_64/$patched_glibc" && \
-#    bsdtar -C / -xvf "$patched_glibc" && \
-
 RUN \
+    # This is required or keys fail
+    pacman-key --init && \
+    pacman -Syu --noconfirm archlinux-keyring && \
+    gpgconf --kill all && \
     # Install packages, missing fldigi, qsstv, wsjtx, gr-lora_sdr, nrsc5
     pacman -Syu --noconfirm python-pip openssh vim tmux screen supervisor iw man mlocate pciutils less bash-completion novnc \
     xorg-server-xvfb x11vnc xfce4 xfce4-goodies xfce4-power-manager blackarch-config-xfce blackarch-menus blackarch-wallpaper \
     blackarch-config-cursor blackarch-config-icons blackarch-config-zsh ttf-liberation hostapd freeradius wpa_supplicant bully \
     wireshark-qt wireshark-cli aircrack-ng mdk3 mdk4 asleap hostapd-wpe wifite pixiewps reaver hashcat hashcat-utils hcxtools \
     hcxdumptool wifi-honey tcpdump nmap gnuradio gqrx gnuradio-osmosdr urh firefox && \
-    # Are we SURE we are up to date?
-    pacman -Syu --confirm && \
     # Uninstall broken package
     pacman -R --noconfirm xfce4-power-manager && \
     # Clean up environment
@@ -28,6 +19,7 @@ RUN \
     sed -i 's/backgrounds\/blackarch.png/blackarch\/wallpaper.png/g' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml && \
     # Copy BlackArch configs
     cp -r /etc/skel/. /root/. && \
+    # clear pacman's cache
     pacman -Scc <<< Y <<< Y
 
 # Expose needed ports
