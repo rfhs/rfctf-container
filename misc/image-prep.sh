@@ -32,16 +32,25 @@ if [ -x "$(command -v portageq 2>&1)" ]; then
 fi
 
 # ensure shared-persistent_storage is empty
-if [ -d '/var/wctf/shared_persistent_storage/*' ]; then
-  rm -rf /var/wctf/shared_persistent_storage/*
-fi
 if [ -d '/var/cache/rfhs-rfctf/shared_persistent_storage/*' ]; then
   rm -rf /var/cache/rfhs-rfctf/shared_persistent_storage/*
 fi
 
-#wipe all the container logs
-[ -d '/var/wctf/contestant' ] && find /var/wctf/contestant/ -type f -not -name authorized_keys -exec rm -rf {} \;
-[ -d '/var/log/rfhs-rfctf' ] && find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
+# wipe all the container logs
+if [ -d '/var/log/rfhs-rfctf' ]; then
+  find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
+fi
+
+# wipe nginx/certbot stuff
+if [ -d '/var/cache/rfhs-rfctf/nginx' ]; then
+  rm -rf /var/cache/rfhs-rfctf/nginx/*
+fi
+if [ -d '/var/cache/rfhs-rfctf/www' ]; then
+  rm -rf /var/cache/rfhs-rfctf/www/*
+fi
+if [ -d '/var/cache/rfhs-rfctf/ssl' ]; then
+  rm -rf /var/cache/rfhs-rfctf/ssl/*
+fi
 
 # clean cloud init
 [ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
