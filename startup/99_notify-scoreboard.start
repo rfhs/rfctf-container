@@ -1,0 +1,37 @@
+#!/bin/bash 
+
+set -eu -o pipefail
+
+if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+  if [ ! -r "/etc/rfctf-contestant" ]; then
+    printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
+    exit 1
+  fi
+  # This warns that /etc//rfctf-contant doesn't exist, which is expected outside of the virtual environment
+  # shellcheck disable=SC1091
+  source /etc/rfctf-contestant
+  export PAGER=cat
+
+  if [ -z "${SQS_RESPONSE_QUEUE}" ]; then
+    echo "ERROR: Queue not populated in /etc/wctf-contestant"
+    exit 1
+  fi
+
+  TEMPREGION="${SQS_RESPONSE_QUEUE%%.amazonaws.com/*}"
+  REGION="${TEMPREGION##https:\/\/sqs.}"
+
+  MESSAGE_GROUP="$(uuidgen)"
+  DEDUPLICATION="$(uuidgen)"
+  TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
+  INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id/)
+  AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
+  MY_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/public-ipv4/)
+
+  aws  --region="${REGION}" sqs send-message \
+    --queue-url "${SQS_RESPONSE_QUEUE}" \
+    --message-group-id "${MESSAGE_GROUP}" \
+    --message-deduplication-id "${DEDUPLICATION}" \
+    --message-body "${TRANSACTION_ID},${FQDN},working,${MY_IP},${AZ},${INSTANCE_ID}"
+else
+  printf "This script is used by RFHS for setting dns automatically in AWS.  It is not useful outside of AWS at this time.\n"
+fi
