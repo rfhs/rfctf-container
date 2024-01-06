@@ -1,0 +1,188 @@
+#!/bin/sh
+
+#set -x
+#set -u
+#set -e
+
+if [ ! -r "/etc/rfctf-contestant" ]; then
+  printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
+  exit 1
+fi
+# This warns that /etc//rfctf-contant doesn't exist, which is expected outside of the virtual environment
+# shellcheck disable=SC1091
+. /etc/rfctf-contestant
+NGINX_CONFDIR='/var/cache/rfhs-rfctf/nginx'
+WEBROOT='/var/cache/rfhs-rfctf/www'
+CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
+for dir in "${NGINX_CONFDIR}" "${WEBROOT}" "${CERTBOT_CONFDIR}"; do
+  if [ ! -d "${dir}" ]; then
+    mkdir -p "${dir}"
+  else
+    rm -rf "${dir:?}"/*
+  fi
+done
+chown 231072:231072 -R "${WEBROOT}"
+chown 231072:231072 -R "${CERTBOT_CONFDIR}"
+
+HOSTNAME=demo.contestant.rfhackers.com
+cat <<EOF > "${NGINX_CONFDIR}"/rfhs-rfctf.conf
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name ${HOSTNAME};
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/rfhscontestant;
+    }
+
+    location / {
+        return 301 https://${HOSTNAME}\$request_uri;
+    }
+}
+EOF
+
+docker run -d --rm -p 80:80 -p 443:443 -p 8443-8446:8443-8446 \
+  -v "${NGINX_CONFDIR}":/etc/nginx/conf.d/:ro \
+  -v "${WEBROOT}":/var/www/rfhscontestant:ro \
+  -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:ro \
+  --name rfhs-nginx nginx:latest
+
+docker run --rm --name rhfs-certbot \
+  -v "${WEBROOT}":/var/www/rfhscontestant/:rw \
+  -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:rw \
+  certbot/certbot:latest \
+  certonly --webroot --webroot-path /var/www/rfhscontestant -d "${HOSTNAME}" \
+  --email null@rfhackers.com --agree-tos --cert-name rfhscontestant
+
+cat << EOF > "${WEBROOT}/index.html"
+<HTML>
+<meta http-equiv="Content-Language" content="en">
+<BODY>
+<a href="https://${HOSTNAME}:8443/vnc.html">Use graphical Pentoo Linux</a><br>
+<a href="https://${HOSTNAME}:8444/vnc.html">Use graphical Kali Linux</a><br>
+<a href="https://${HOSTNAME}:8445/vnc.html">Use graphical Parrot Linux</a><br>
+<a href="https://$HOSTNAME:8446/vnc.html">Use graphical Blackarch Linux</a>
+</BODY>
+</HTML>
+EOF
+
+cat <<EOF > "${NGINX_CONFDIR}"/rfhs-rfctf-ssl.conf
+server {
+  listen 443 ssl default_server reuseport;
+  listen [::]:443 ssl default_server reuseport;
+  server_name ${HOSTNAME};
+
+  ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/rfhscontestant/chain.pem;
+
+  location / {
+    root /var/www/rfhscontestant;
+  }
+}
+
+#Pentoo
+server {
+  listen 8443 ssl default_server reuseport;
+  listen [::]:8443 ssl default_server reuseport;
+  server_name ${HOSTNAME};
+
+  ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/rfhscontestant/chain.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:8801/;
+  }
+
+  location /websockify {
+    proxy_pass http://127.0.0.1:8801/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 61s;
+    proxy_buffering off;
+
+  }
+}
+#Kali
+server {
+  listen 8444 ssl default_server reuseport;
+  listen [::]:8444 ssl default_server reuseport;
+  server_name ${HOSTNAME};
+
+  ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/rfhscontestant/chain.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:8802/;
+  }
+
+  location /websockify {
+    proxy_pass http://127.0.0.1:8802/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 61s;
+    proxy_buffering off;
+
+  }
+}
+#Parrot
+server {
+  listen 8445 ssl default_server reuseport;
+  listen [::]:8445 ssl default_server reuseport;
+  server_name ${HOSTNAME};
+
+  ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/rfhscontestant/chain.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:8803/;
+  }
+
+  location /websockify {
+    proxy_pass http://127.0.0.1:8803/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 61s;
+    proxy_buffering off;
+
+  }
+}
+#Blackarch
+server {
+  listen 8446 ssl default_server reuseport;
+  listen [::]:8446 ssl default_server reuseport;
+  server_name ${HOSTNAME};
+
+  ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/rfhscontestant/chain.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:8804/;
+  }
+
+  location /websockify {
+    proxy_pass http://127.0.0.1:8804/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 61s;
+    proxy_buffering off;
+
+  }
+}
+EOF
+
+docker exec rfhs-nginx nginx -s reload

@@ -1,6 +1,6 @@
-#!/bin/bash 
+#!/bin/sh 
 
-set -eu -o pipefail
+#set -eu
 
 if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
   if [ ! -r "/etc/rfctf-contestant" ]; then
@@ -9,7 +9,7 @@ if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/vi
   fi
   # This warns that /etc//rfctf-contant doesn't exist, which is expected outside of the virtual environment
   # shellcheck disable=SC1091
-  source /etc/rfctf-contestant
+  . /etc/rfctf-contestant
   export PAGER=cat
 
   if [ -z "${SQS_RESPONSE_QUEUE}" ]; then
