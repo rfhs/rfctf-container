@@ -32,11 +32,8 @@ server {
     }
 
     location / {
+        index index.html;
         root /var/www/rfhscontestant/;
-    }
-
-    location /websockify {
-        return 301 https://${FQDN}\$request_uri;
     }
 }
 EOF
