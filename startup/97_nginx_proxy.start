@@ -13,8 +13,6 @@ CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
 for dir in "${NGINX_CONFDIR}" "${WEBROOT}" "${CERTBOT_CONFDIR}"; do
   if [ ! -d "${dir}" ]; then
     mkdir -p "${dir}"
-  else
-    rm -rf "${dir:?}"/*
   fi
 done
 chown 231072:231072 -R "${WEBROOT}"
