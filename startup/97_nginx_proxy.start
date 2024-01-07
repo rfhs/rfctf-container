@@ -15,6 +15,7 @@ for dir in "${NGINX_CONFDIR}" "${WEBROOT}" "${CERTBOT_CONFDIR}"; do
     mkdir -p "${dir}"
   fi
 done
+# docker user namespace maps 0 to 231072
 chown 231072:231072 -R "${WEBROOT}"
 chown 231072:231072 -R "${CERTBOT_CONFDIR}"
 
