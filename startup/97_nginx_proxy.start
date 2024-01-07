@@ -32,9 +32,25 @@ server {
     }
 
     location / {
+        root /var/www/rfhscontestant/;
+    }
+
+    location /websockify {
         return 301 https://${FQDN}\$request_uri;
     }
 }
+EOF
+
+cat << EOF > "${WEBROOT}/index.html"
+<HTML>
+<meta http-equiv="Content-Language" content="en">
+<meta http-equiv="refresh" content="60">
+<BODY>
+Setting up certificates for the web server, please stand by.<br>
+Please report if you see this screen for more than 10 minutes.<br>
+This page refreshes automatically once per minute.<br>
+</BODY>
+</HTML>
 EOF
 
 docker run -d --rm --userns host --network host \
