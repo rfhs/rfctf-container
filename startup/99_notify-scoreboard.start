@@ -13,7 +13,7 @@ if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/vi
   export PAGER=cat
 
   if [ -z "${SQS_RESPONSE_QUEUE}" ]; then
-    echo "ERROR: Queue not populated in /etc/wctf-contestant"
+    echo "ERROR: Queue not populated in /etc/rfctf-contestant"
     exit 1
   fi
 
