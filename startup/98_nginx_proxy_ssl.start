@@ -1,69 +1,39 @@
 #!/bin/sh
 
-#set -x
-#set -u
-#set -e
+if [ -f "/etc/letsencrypt/live/rfhscontestant/fullchain.pem" ] && \
+  [ -f "/etc/letsencrypt/live/rfhscontestant/privkey.pem" ] && \
+  [ -f "/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
+  #we have certs, we should add a check for renewal but honestly we don't run the game that long
+  exit 0
+fi
 
 if [ ! -r "/etc/rfctf-contestant" ]; then
   printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
   exit 1
 fi
-# This warns that /etc//rfctf-contant doesn't exist, which is expected outside of the virtual environment
+# This warns that /etc/rfctf-contant doesn't exist, which is expected outside of the virtual environment
 # shellcheck disable=SC1091
 . /etc/rfctf-contestant
+
 NGINX_CONFDIR='/var/cache/rfhs-rfctf/nginx'
 WEBROOT='/var/cache/rfhs-rfctf/www'
 CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
-for dir in "${NGINX_CONFDIR}" "${WEBROOT}" "${CERTBOT_CONFDIR}"; do
-  if [ ! -d "${dir}" ]; then
-    mkdir -p "${dir}"
-  else
-    rm -rf "${dir:?}"/*
-  fi
-done
-chown 231072:231072 -R "${WEBROOT}"
-chown 231072:231072 -R "${CERTBOT_CONFDIR}"
-
-HOSTNAME=demo.contestant.rfhackers.com
-cat <<EOF > "${NGINX_CONFDIR}"/rfhs-rfctf.conf
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name ${HOSTNAME};
-    server_tokens off;
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/rfhscontestant;
-    }
-
-    location / {
-        return 301 https://${HOSTNAME}\$request_uri;
-    }
-}
-EOF
-
-docker run -d --rm -p 80:80 -p 443:443 -p 8443-8446:8443-8446 \
-  -v "${NGINX_CONFDIR}":/etc/nginx/conf.d/:ro \
-  -v "${WEBROOT}":/var/www/rfhscontestant:ro \
-  -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:ro \
-  --name rfhs-nginx nginx:latest
 
 docker run --rm --name rhfs-certbot \
   -v "${WEBROOT}":/var/www/rfhscontestant/:rw \
   -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:rw \
   certbot/certbot:latest \
-  certonly --webroot --webroot-path /var/www/rfhscontestant -d "${HOSTNAME}" \
+  certonly --webroot --webroot-path /var/www/rfhscontestant -d "${FQDN}" \
   --email null@rfhackers.com --agree-tos --cert-name rfhscontestant
 
 cat << EOF > "${WEBROOT}/index.html"
 <HTML>
 <meta http-equiv="Content-Language" content="en">
 <BODY>
-<a href="https://${HOSTNAME}:8443/vnc.html">Use graphical Pentoo Linux</a><br>
-<a href="https://${HOSTNAME}:8444/vnc.html">Use graphical Kali Linux</a><br>
-<a href="https://${HOSTNAME}:8445/vnc.html">Use graphical Parrot Linux</a><br>
-<a href="https://$HOSTNAME:8446/vnc.html">Use graphical Blackarch Linux</a>
+<a href="https://${FQDN}:8443/vnc.html">Use graphical Pentoo Linux</a><br>
+<a href="https://${FQDN}:8444/vnc.html">Use graphical Kali Linux</a><br>
+<a href="https://${FQDN}:8445/vnc.html">Use graphical Parrot Linux</a><br>
+<a href="https://${FQDN}:8446/vnc.html">Use graphical Blackarch Linux</a>
 </BODY>
 </HTML>
 EOF
@@ -72,7 +42,7 @@ cat <<EOF > "${NGINX_CONFDIR}"/rfhs-rfctf-ssl.conf
 server {
   listen 443 ssl default_server reuseport;
   listen [::]:443 ssl default_server reuseport;
-  server_name ${HOSTNAME};
+  server_name ${FQDN};
 
   ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
@@ -87,7 +57,7 @@ server {
 server {
   listen 8443 ssl default_server reuseport;
   listen [::]:8443 ssl default_server reuseport;
-  server_name ${HOSTNAME};
+  server_name ${FQDN};
 
   ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
@@ -112,7 +82,7 @@ server {
 server {
   listen 8444 ssl default_server reuseport;
   listen [::]:8444 ssl default_server reuseport;
-  server_name ${HOSTNAME};
+  server_name ${FQDN};
 
   ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
@@ -137,7 +107,7 @@ server {
 server {
   listen 8445 ssl default_server reuseport;
   listen [::]:8445 ssl default_server reuseport;
-  server_name ${HOSTNAME};
+  server_name ${FQDN};
 
   ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;
@@ -162,7 +132,7 @@ server {
 server {
   listen 8446 ssl default_server reuseport;
   listen [::]:8446 ssl default_server reuseport;
-  server_name ${HOSTNAME};
+  server_name ${FQDN};
 
   ssl_certificate /etc/letsencrypt/live/rfhscontestant/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/rfhscontestant/privkey.pem;

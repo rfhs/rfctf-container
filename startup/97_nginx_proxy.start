@@ -1,0 +1,45 @@
+#!/bin/sh
+
+if [ ! -r "/etc/rfctf-contestant" ]; then
+  printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
+  exit 1
+fi
+# This warns that /etc/rfctf-contant doesn't exist, which is expected outside of the virtual environment
+# shellcheck disable=SC1091
+. /etc/rfctf-contestant
+NGINX_CONFDIR='/var/cache/rfhs-rfctf/nginx'
+WEBROOT='/var/cache/rfhs-rfctf/www'
+CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
+for dir in "${NGINX_CONFDIR}" "${WEBROOT}" "${CERTBOT_CONFDIR}"; do
+  if [ ! -d "${dir}" ]; then
+    mkdir -p "${dir}"
+  else
+    rm -rf "${dir:?}"/*
+  fi
+done
+chown 231072:231072 -R "${WEBROOT}"
+chown 231072:231072 -R "${CERTBOT_CONFDIR}"
+
+cat <<EOF > "${NGINX_CONFDIR}"/rfhs-rfctf.conf
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name ${FQDN};
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/rfhscontestant;
+    }
+
+    location / {
+        return 301 https://${FQDN}\$request_uri;
+    }
+}
+EOF
+
+docker run -d --rm -p 80:80 -p 443:443 -p 8443-8446:8443-8446 \
+  -v "${NGINX_CONFDIR}":/etc/nginx/conf.d/:ro \
+  -v "${WEBROOT}":/var/www/rfhscontestant:ro \
+  -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:ro \
+  --name rfhs-nginx nginx:latest
