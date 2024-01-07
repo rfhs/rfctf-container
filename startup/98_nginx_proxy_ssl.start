@@ -2,13 +2,6 @@
 
 set -e
 
-if [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/fullchain.pem" ] && \
-  [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/privkey.pem" ] && \
-  [ -f "${CERTBOT_CONFDIR}/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
-  #we have certs, we should add a check for renewal but honestly we don't run the game that long
-  exit 0
-fi
-
 if [ ! -r "/etc/rfctf-contestant" ]; then
   printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
   exit 1
@@ -21,12 +14,22 @@ NGINX_CONFDIR='/var/cache/rfhs-rfctf/nginx'
 WEBROOT='/var/cache/rfhs-rfctf/www'
 CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
 
-docker run --rm --name rhfs-certbot \
-  -v "${WEBROOT}":/var/www/rfhscontestant/:rw \
-  -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:rw \
-  certbot/certbot:latest \
-  certonly --webroot --webroot-path /var/www/rfhscontestant -d "${FQDN}" \
-  --email null@rfhackers.com --agree-tos --cert-name rfhscontestant
+if [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/fullchain.pem" ] && \
+  [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/privkey.pem" ] && \
+  [ -f "${CERTBOT_CONFDIR}/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
+  HAVE_CERTS="true"
+else
+  HAVE_CERTS="false"
+fi
+
+if [ "${HAVE_CERTS}" = "false" ]; then
+  docker run --rm --name rhfs-certbot \
+    -v "${WEBROOT}":/var/www/rfhscontestant/:rw \
+    -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:rw \
+    certbot/certbot:latest \
+    certonly --webroot --webroot-path /var/www/rfhscontestant -d "${FQDN}" \
+    --email null@rfhackers.com --agree-tos --cert-name rfhscontestant
+fi
 
 cat << EOF > "${WEBROOT}/index.html"
 <HTML>
@@ -157,4 +160,7 @@ server {
 }
 EOF
 
-docker exec rfhs-nginx nginx -s reload
+if [ "${HAVE_CERTS}" = "false" ]; then
+  # we didn't have certs but by now we should
+  docker exec rfhs-nginx nginx -s reload
+fi
