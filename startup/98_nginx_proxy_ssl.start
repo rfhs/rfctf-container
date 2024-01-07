@@ -1,8 +1,10 @@
 #!/bin/sh
 
-if [ -f "/etc/letsencrypt/live/rfhscontestant/fullchain.pem" ] && \
-  [ -f "/etc/letsencrypt/live/rfhscontestant/privkey.pem" ] && \
-  [ -f "/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
+set -e
+
+if [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/fullchain.pem" ] && \
+  [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/privkey.pem" ] && \
+  [ -f "${CERTBOT_CONFDIR}/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
   #we have certs, we should add a check for renewal but honestly we don't run the game that long
   exit 0
 fi
