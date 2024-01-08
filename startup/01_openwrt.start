@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="openwrt"
-export CONTAINER_IMAGE="rfhs/openwrt"
+export CONTAINER_IMAGE="rfhs/openwrt:4.5.6"
 CONTAINER_PHYS="$(seq 0 9)"
 export CONTAINER_PHYS
 #container_networks can't really be changed right now as some of it is hardcoded in contestant-init
@@ -17,5 +17,5 @@ fi
 
 "$(dirname "${0}")"/rfhs-container-init
 
-printf "${CONTAINER_NAME} takes time to start, sleeping 2 minutes...\n"
+printf '%s takes time to start, sleeping 2 minutes...\n' "${CONTAINER_NAME}"
 sleep 2m
