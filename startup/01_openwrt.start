@@ -15,6 +15,13 @@ if [ "$(awk -F. '{print $1}' /proc/uptime)" -lt 60 ]; then
   sleep "${sleepy_tyme}"
 fi
 
+# Zima board doesn't have an rtc
+if [ -x '/etc/init.d/ntp-client' ]; then
+  sleep 10
+  /etc/init.d/ntp-client restart
+  sleep 20
+fi
+
 "$(dirname "${0}")"/rfhs-container-init
 
 printf '%s takes time to start, sleeping 2 minutes...\n' "${CONTAINER_NAME}"
