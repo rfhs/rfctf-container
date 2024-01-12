@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="openwrt"
-export CONTAINER_IMAGE="rfhs/openwrt:4.5.6"
+export CONTAINER_IMAGE="rfhs/openwrt"
 CONTAINER_PHYS="$(seq 0 9)"
 export CONTAINER_PHYS
 #container_networks can't really be changed right now as some of it is hardcoded in contestant-init
