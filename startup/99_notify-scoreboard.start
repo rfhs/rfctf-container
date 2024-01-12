@@ -7,7 +7,7 @@ if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/vi
     printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
     exit 1
   fi
-  # This warns that /etc//rfctf-contant doesn't exist, which is expected outside of the virtual environment
+  # This warns that /etc/rfctf-contestant doesn't exist, which is expected outside of the virtual environment
   # shellcheck disable=SC1091
   . /etc/rfctf-contestant
   export PAGER=cat
