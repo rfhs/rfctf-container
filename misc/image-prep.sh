@@ -48,9 +48,10 @@ fi
 if [ -d '/var/cache/rfhs-rfctf/www' ]; then
   rm -rf /var/cache/rfhs-rfctf/www/*
 fi
-if [ -d '/var/cache/rfhs-rfctf/ssl' ]; then
-  rm -rf /var/cache/rfhs-rfctf/ssl/*
-fi
+## We are using a star cert while waiting for approval for more requests
+#if [ -d '/var/cache/rfhs-rfctf/ssl' ]; then
+#  rm -rf /var/cache/rfhs-rfctf/ssl/*
+#fi
 
 # clean cloud init
 [ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
