@@ -53,5 +53,11 @@ fi
 #  rm -rf /var/cache/rfhs-rfctf/ssl/*
 #fi
 
+# Check if old kernels are still there
+if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
+  printf 'Found more than one set of kernel sources, please manually clean them up before snapshotting.\n'
+  exit 1
+fi
+
 # clean cloud init
 [ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
