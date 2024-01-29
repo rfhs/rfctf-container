@@ -4,6 +4,16 @@ RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get upda
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get dist-upgrade -y && \
   # missing urh, gr-lora_sdr, nrsc5, mlocate
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y aircrack-ng asleap freeradius-wpe hostapd-wpe iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc kali-desktop-xfce dbus-x11 dialog librsvg2-common tmux tcpdump nmap iproute2 iputils-ping curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx isc-dhcp-client libnotify-bin && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y equivs && \
+  equivs-control xfce4-power-manager-plugins && \
+  sed -i "s/Package:.*/Package: xfce4-power-manager-plugins/" xfce4-power-manager-plugins && \
+  sed -i "s/^# Version:.*/Version: 1:4.16.0-1/" xfce4-power-manager-plugins && \
+  equivs-build xfce4-power-manager-plugins && \
+  mv ./xfce4-power-manager-plugins_4.16.0-1_all.deb /tmp/ && \
+  chmod 666 /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  apt-get install -y /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  rm /tmp/xfce4-power-manager-plugins_4.16.0-1_all.deb && \
+  apt-get purge -y equivs && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
