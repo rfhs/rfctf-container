@@ -31,4 +31,4 @@ WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
 
-HEALTHCHECK --interval=60s --start-period=30s --retries=2 CMD /usr/local/sbin/contestant-checker
+HEALTHCHECK --interval=150s --start-period=60s --retries=2 CMD /usr/local/sbin/contestant-checker
