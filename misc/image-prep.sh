@@ -1,33 +1,33 @@
 #!/bin/sh
 # This script is used before creating the game image to clean up the master
 
-cleanup_docker() {
-  # cleanup untagged docker images
-  if [ -n "$(docker images | grep "<none>" | awk '{print $3}')" ]; then
-    docker rmi $(docker images | grep "<none>" | awk '{print $3}')
-  fi
-}
-
 # stop all running docker containers
 if [ -n "$(docker ps -a -q)" ]; then
+  # shellcheck disable=2046
   docker stop $(docker ps -a -q)
 fi
-# remove any stopped containers which weren't removed already
-if [ -n "$(docker ps -a -q)" ]; then
-  docker rm $(docker ps -a -q)
-fi
+
+docker container prune --force
 
 # pull latest images for everything
 for image in $(docker image ls | grep '^rfhs' | awk '{print $1}'); do
-  cleanup_docker
+  docker image prune --force
   docker pull "${image}"
-  cleanup_docker
+  docker image prune --force
 done
 
 # cleanup unneeded gentoo files leftover from upgrading
 if [ -x "$(command -v portageq 2>&1)" ]; then
-  rm -rf "$(portageq envvar DISTDIR)"/*
-  rm -rf "$(portageq envvar PKGDIR)"/*
+  if [ -d "$(portageq envvar DISTDIR)" ]; then
+    # protected above
+    # shellcheck disable=2115
+    rm -rf "$(portageq envvar DISTDIR)"/*
+  fi
+  if [ -d "$(portage envvar PKGDIR)" ]; then
+    # protected above
+    # shellcheck disable=2115
+    rm -rf "$(portageq envvar PKGDIR)"/*
+  fi
   rm -rf "$(portageq envvar PORTAGE_TMPDIR)"/portage/*
 fi
 
