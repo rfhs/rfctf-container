@@ -7,7 +7,7 @@ if [ -n "$(docker ps -a -q)" ]; then
   docker stop $(docker ps -a -q)
 fi
 
-docker container prune --force
+docker system prune --volumes --force
 
 # pull latest images for everything
 for image in $(docker image ls | grep '^rfhs' | awk '{print $1}'); do
