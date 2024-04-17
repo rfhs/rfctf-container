@@ -23,7 +23,7 @@ if [ -x "$(command -v portageq 2>&1)" ]; then
     # shellcheck disable=2115
     rm -rf "$(portageq envvar DISTDIR)"/*
   fi
-  if [ -d "$(portage envvar PKGDIR)" ]; then
+  if [ -d "$(portageq envvar PKGDIR)" ]; then
     # protected above
     # shellcheck disable=2115
     rm -rf "$(portageq envvar PKGDIR)"/*
