@@ -9,3 +9,4 @@ export CONTAINER_PHYS
 export CONTAINER_NETWORKS=""
 
 "$(dirname "${0}")"/rfhs-container-init
+sleep 10

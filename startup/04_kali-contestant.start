@@ -10,3 +10,4 @@ export SSH_PORT="2202"
 export VNC_PORT="8802"
 
 "$(dirname "${0}")"/rfhs-container-init
+sleep 10
