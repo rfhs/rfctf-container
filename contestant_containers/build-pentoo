@@ -10,6 +10,7 @@ fi
 docker build --no-cache . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 docker run -d --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
+sleep 10
 if docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then
