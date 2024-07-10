@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.29"
+VERS="0.30"
 DISTRO="blackarch"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"

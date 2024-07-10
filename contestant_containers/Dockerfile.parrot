@@ -14,7 +14,8 @@ RUN \
   cd /etc/freeradius-wpe/3.0/certs && \
   make clean && \
   cd /etc/hostapd-mana/certs && \
-  rm ca.pem csr.csr dhparam.pem server.key server.pem
+  rm ca.pem csr.csr dhparam.pem server.key server.pem && \
+  sed 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 
 # Expose needed ports
 EXPOSE 22/tcp

@@ -22,7 +22,8 @@ RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get upda
   make clean && \
   cd /etc/hostapd-wpe/certs && \
   make clean && \
-  touch ~/.hushlogin
+  touch ~/.hushlogin && \
+  sed 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 
 # Expose needed ports
 EXPOSE 22/tcp
