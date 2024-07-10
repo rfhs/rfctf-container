@@ -15,6 +15,12 @@ if lsmod | grep -q mac80211_hwsim; then
     # and removing cfg80211 resets phy numbers
     sleep 2
     modprobe -r cfg80211
+
+    # contestants want to tun
+    # https://github.com/rfhs/rfctf-container/issues/16
+    if modinfo tun > /dev/null 2>&1; then
+      modprobe tun
+    fi
   fi
   sleep 2
 fi
