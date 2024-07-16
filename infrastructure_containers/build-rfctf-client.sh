@@ -93,9 +93,9 @@ if [ -n "$(docker ps -a -q)" ]; then
   docker stop $(docker ps -a -q)
 fi
 # remove any stopped containers which weren't removed already
-if [ -n "$(docker ps -a -q)" ]; then
-  docker rm $(docker ps -a -q)
-fi
+#if [ -n "$(docker ps -a -q)" ]; then
+#  docker rm $(docker ps -a -q)
+#fi
 
 # Get a list of the radios (a little safer than assuming)
 #CONTAINER_PHYS="phy10 phy11 phy12 phy13 phy14 phy15 phy16 phy17 phy18 phy19 phy20 phy21 phy22 phy23 phy24 phy25"
