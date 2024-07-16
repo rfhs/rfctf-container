@@ -21,7 +21,7 @@ RUN \
   cp -r /etc/skel/. /root/. && \
   # clear pacman's cache
   pacman -Scc <<< Y <<< Y && \
-  sed 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+  sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 
 # Expose needed ports
 EXPOSE 22/tcp

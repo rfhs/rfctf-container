@@ -36,7 +36,7 @@ RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
   rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/doc/* && \
-  sed 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+  sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 RUN \
   # configure the gui to be nicer
   # magic to autohide panel 2
