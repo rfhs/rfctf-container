@@ -139,7 +139,7 @@ else
         $([ -d '/root/wctf-restricted/sdr/simple_sdr_challenge_runner/challenges/current_conf' ] && printf -- '-v /root/wctf-restricted/sdr/simple_sdr_challenge_runner/challenges/current_conf:/root/challengectl/challenges/current_conf\n') \
         -v /dev/bus/usb:/dev/bus/usb \
         -v "${sps}":/root/shared_persistent_storage -v "${LOG_DIR}":/var/log \
-        "${CONTAINER_IMAGE}" ./challengectl.py current_conf.csv devices.txt.rfhs
+        "${CONTAINER_IMAGE}" ./challengectl.py -f current_conf.csv -d devices.txt.rfhs
     fi
   fi
 fi
