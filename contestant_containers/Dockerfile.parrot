@@ -1,4 +1,4 @@
-FROM docker.io/parrotsec/core
+FROM docker.io/parrotsec/core:latest
 RUN \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
