@@ -9,36 +9,32 @@ fi
 
 docker system prune --volumes --force
 
-# pull latest images for everything
-for image in $(docker image ls | grep '^rfhs' | awk '{print $1}'); do
-  docker image prune --force
-  docker pull "${image}"
-  docker image prune --force
-done
-
 # cleanup unneeded gentoo files leftover from upgrading
 if [ -x "$(command -v portageq 2>&1)" ]; then
-  if [ -d "$(portageq envvar DISTDIR)" ]; then
-    # protected above
-    # shellcheck disable=2115
-    rm -rf "$(portageq envvar DISTDIR)"/*
+  DISTDIR="$(portageq envvar DISTDIR)"
+  if [ -d "${DISTDIR}" ]; then
+    rm -rf "${DISTDIR:?}"/*
   fi
-  if [ -d "$(portageq envvar PKGDIR)" ]; then
-    # protected above
-    # shellcheck disable=2115
-    rm -rf "$(portageq envvar PKGDIR)"/*
+  PKGDIR="$(portageq envvar PKGDIR)"
+  if [ -d "${PKGDIR}" ]; then
+    rm -rf "${PKGDIR:?}"/*
   fi
   rm -rf "$(portageq envvar PORTAGE_TMPDIR)"/portage/*
 fi
 
 # ensure shared-persistent_storage is empty
-if [ -d '/var/cache/rfhs-rfctf/shared_persistent_storage/*' ]; then
+if [ -d '/var/cache/rfhs-rfctf/shared_persistent_storage/' ]; then
   rm -rf /var/cache/rfhs-rfctf/shared_persistent_storage/*
+fi
+
+# Ensure the key location exists and has correct perms
+if [ ! -d '/var/cache/rfhs-rfctf/key' ]; then
+  mkdir -p '/var/cache/rfhs-rfctf/key'
 fi
 
 # wipe all the container logs
 if [ -d '/var/log/rfhs-rfctf' ]; then
-  find /var/log/rfhs-rfctf/ -type f -not -name authorized_keys -exec rm -rf {} \;
+  rm -rf /var/log/rfhs-rfctf/*
 fi
 
 # wipe nginx/certbot stuff
@@ -52,6 +48,7 @@ fi
 #if [ -d '/var/cache/rfhs-rfctf/ssl' ]; then
 #  rm -rf /var/cache/rfhs-rfctf/ssl/*
 #fi
+## We check if the star cert is valid after the docker pulls so we can see the output easier
 
 # Check if old kernels are still there
 if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
@@ -59,5 +56,20 @@ if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
   exit 1
 fi
 
+# pull latest images for everything, after cleaning up to ensure there is space
+for image in $(docker image ls | grep '^rfhs' | awk '{print $1}') 'certbot/certbot' nginx; do
+  docker image prune --force
+  docker pull "${image}"
+  docker image prune --force
+done
+
+docker system prune --volumes --force
+
+if ! docker run --rm --name rfhs-certbox -v /var/cache/rfhs-rfctf/www:/var/www/rfhscontestant/:rw -v /var/cache/rfhs-rfctf/ssl:/etc/letsencrypt/:rw certbot/certbot:latest certificates 2> /dev/null | grep 'VALID'; then
+  printf "Certs are no longer valid! Please manually renew certs\n"
+  exit 1
+fi
+
 # clean cloud init
+# always run this LAST
 [ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
