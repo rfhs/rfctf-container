@@ -87,15 +87,19 @@ fi
 
 if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
   # The key file needs to be owned by the docker root user
-  if [ -f '/var/cache/rfhs-rfctf/key/authorized_keys' ]; then
-    chown 231072:231072 /var/cache/rfhs-rfctf/key/authorized_keys
+  SSH_KEY_FILE='/var/cache/rfhs-rfctf/key/authorized_keys'
+  if [ -f "${SSH_KEY_FILE}" ]; then
+    # docker user namespace maps 0 to 231072
+    if [ "$(stat -c "%u" "${SSH_KEY_FILE}")" != "231072" ] || [ "$(stat -c "%g" "${SSH_KEY_FILE}")" != "231072" ]; then
+      chown 231072:231072 "${SSH_KEY_FILE}"
+    fi
   fi
   # shellcheck disable=SC2046
   docker run -p "${SSH_PORT}":22 -p "${VNC_PORT}":8080 --rm -d --net=contestant --name "${CONTAINER_NAME}" \
     --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
     --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
     --security-opt seccomp=unconfined \
-    $([ -f '/var/cache/rfhs-rfctf/key/authorized_keys' ] && printf -- '-v /var/cache/rfhs-rfctf/key/authorized_keys:/root/.ssh/authorized_keys\n') \
+    $([ -f "${SSH_KEY_FILE}" ] && printf -- "-v ${SSH_KEY_FILE}:/root/.ssh/authorized_keys\n") \
     -v "${sps}":/root/shared_persistent_storage -v "${LOG_DIR}":/var/log \
     "${CONTAINER_IMAGE}"
 else
