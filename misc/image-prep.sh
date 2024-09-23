@@ -72,4 +72,8 @@ fi
 
 # clean cloud init
 # always run this LAST
-[ -x "$(command -v cloud-init 2>&1)" ] && cloud-init clean
+if [ -x "$(command -v cloud-init 2>&1)" ]; then
+  cloud-init clean 2>&1 | grep -v '/etc/cloud/clean.d/README'
+else
+  printf "cloud-init was not found, if you expected it to be found this is a problem.\n"
+fi
