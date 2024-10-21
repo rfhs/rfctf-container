@@ -14,7 +14,7 @@ RUN \
   # Uninstall broken package
   pacman -R --noconfirm xfce4-power-manager && \
   # Clean up environment
-  rm -r /etc/hostapd-wpe/certs/* && \
+  if [ -d '/etc/hostapd-wpe/certs' ]; then rm -rf /etc/hostapd-wpe/certs/*; fi && \
   # Point wallpaper to the right files
   sed -i 's/backgrounds\/blackarch.png/blackarch\/wallpaper.png/g' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml && \
   # Copy BlackArch configs
