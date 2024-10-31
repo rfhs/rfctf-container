@@ -17,7 +17,7 @@ trap f_exit INT
 create_ns_link() {
   # Set the name for the namespace
   PID="$(docker inspect -f '{{.State.Pid}}' "${CONTAINER_NAME}")"
-  if [ -z "${PID}" ]; then
+  if [ -z "${PID:-}" ] || [ "0" = "${PID:-}" ]; then
     printf "Unable to identify process id for %s, skipping.\n" "${CONTAINER_NAME}"
     exit 1
   fi
