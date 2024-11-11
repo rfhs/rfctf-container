@@ -1,0 +1,34 @@
+#!/bin/sh
+
+super_patient_start() {
+  if [ -z "${1:-}" ]; then
+    printf "I am not super patient enough to start a service with being told which one...\n"
+    exit 1
+  fi
+  status="$(supervisorctl status "${1}" | awk '{print $2}')"
+  if [ "${status}" = "STOPPED" ]; then
+    # One start only, Vasily...
+    # Services are set to autorestart so one start only should be fine
+    supervisorctl start "${1}"
+    sleep 1
+    status="$(supervisorctl status "${1}" | awk '{print $2}')"
+  fi
+  while [ "${status}" != "RUNNING" ]; do
+    status="$(supervisorctl status "${1}" | awk '{print $2}')"
+    printf "%s service is not running yet, it is currently %s\n" "${1}" "${status}"
+    sleep 1 
+  done
+
+}
+
+if [ ! -d '/run/sshd' ]; then
+  mkdir -p '/run/sshd'
+fi
+
+super_patient_start sshd
+super_patient_start X11
+super_patient_start xfce
+super_patient_start x11vnc
+super_patient_start novnc
+
+exit 0

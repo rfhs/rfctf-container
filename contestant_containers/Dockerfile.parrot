@@ -27,6 +27,7 @@ ENV DISPLAY=:0
 COPY files/stargate.words /root/stargate.words
 COPY files/supervisord-debianish.conf /etc/supervisord/supervisord.conf
 COPY files/contestant-checker /usr/local/sbin/contestant-checker
+COPY files/contestant_start /usr/local/sbin/contestant_start
 
 WORKDIR /root
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]

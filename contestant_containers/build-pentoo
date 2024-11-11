@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.32"
+VERS="0.33"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
@@ -11,7 +11,8 @@ docker pull docker.io/pentoolinux/pentoo-core:latest
 docker build --no-cache . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 docker run -d --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
-sleep 10
+printf "Sleeping 30 seconds so services have time to start up...\n"
+sleep 30
 if docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then
