@@ -132,7 +132,6 @@ else
         #this still doesn't work, I think dhcpcd can't handle it
         #--cap-add net_raw --cap-add net_admin --cap-add=sys_admin --security-opt seccomp=unconfined \
     fi
-    #challengectl isn't public yet so this won't work for you
     if [ "${CONTAINER_NAME}" = "rfctf-sdr" ]; then
       # shellcheck disable=SC2046
       docker run -d --rm --network none --name "${CONTAINER_NAME}" \
