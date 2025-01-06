@@ -1,6 +1,8 @@
 #!/bin/sh
 # This script is used before creating the game image to clean up the master
 
+set -e
+
 # stop all running docker containers
 if [ -n "$(docker ps -a -q)" ]; then
   # shellcheck disable=2046
@@ -21,6 +23,13 @@ if [ -x "$(command -v portageq 2>&1)" ]; then
   fi
   rm -rf "$(portageq envvar PORTAGE_TMPDIR)"/portage/*
 fi
+
+# cleanup some undesired logs
+for i in cloud-init.log cloud-init-output.log amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log portage/elog/summary.log; do
+  if [ -e "/var/log/${i}" ]; then
+    rm "/var/log/${i}"
+  fi
+done
 
 # ensure shared-persistent_storage is empty
 if [ -d '/var/cache/rfhs-rfctf/shared_persistent_storage/' ]; then
@@ -77,3 +86,5 @@ if [ -x "$(command -v cloud-init 2>&1)" ]; then
 else
   printf "cloud-init was not found, if you expected it to be found this is a problem.\n"
 fi
+
+printf "%s ran successfully\n" "${0}"
