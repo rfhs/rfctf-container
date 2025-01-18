@@ -3,6 +3,16 @@
 
 set -e
 
+check_disk_usage() {
+  used="$(df -h / --output=pcent | tail -n1 | awk -F'%' '{gsub(/ /, "", $0); print $1}')"
+  if [ "${used}" -gt '80' ]; then
+    printf 'FATAL: Disk is too full, disk must be below 80% and is currently %s\n' "${used}%"
+    exit 1
+  else
+    printf 'INFO: Used disk space is %s\n' "${used}%"
+  fi
+}
+
 # stop all running docker containers
 if [ -n "$(docker ps -a -q)" ]; then
   # shellcheck disable=2046
@@ -69,6 +79,8 @@ if [ "$(find /lib/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; the
   exit 1
 fi
 
+check_disk_usage
+
 # pull latest images for everything, after cleaning up to ensure there is space
 for image in $(docker image ls | grep '^rfhs' | awk '{print $1}') 'certbot/certbot' nginx; do
   docker image prune --force
@@ -78,17 +90,37 @@ done
 
 docker system prune --volumes --force
 
+printf -- '\n\n--------------------------------------------------------------------------------\n'
 if ! docker run --rm --name rfhs-certbox -v /var/cache/rfhs-rfctf/www:/var/www/rfhscontestant/:rw -v /var/cache/rfhs-rfctf/ssl:/etc/letsencrypt/:rw certbot/certbot:latest certificates 2> /dev/null | grep 'VALID'; then
-  printf "Certs are no longer valid! Please manually renew certs\n"
+  printf 'Certs are no longer valid! Please manually renew certs\n'
   exit 1
 fi
+
+check_disk_usage
 
 # clean cloud init
 # always run this LAST
 if [ -x "$(command -v cloud-init 2>&1)" ]; then
-  cloud-init clean 2>&1 | grep -v '/etc/cloud/clean.d/README'
+  #printf 'Running `cloud-init clean` ...\n'
+  if cloud-init clean > /dev/null 2>&1; then
+    #printf 'cloud-init clean successful\n'
+    true
+  else
+    #re-run to see the error
+    cloud-init clean
+    printf 'cloud-init clean failed\n'
+    exit 1
+  fi
+  if [ "$(cloud-init status)" = "status: not run" ]; then
+    #printf 'cloud-init status "not run", safe to continue\n'
+    true
+  else
+    printf 'cloud-init clean worked but status is wrong\n'
+    exit 1
+  fi
 else
-  printf "cloud-init was not found, if you expected it to be found this is a problem.\n"
+  printf 'cloud-init was not found, if you expected it to be found this is a problem.\n'
 fi
 
-printf "%s ran successfully\n" "${0}"
+printf '%s ran successfully\n' "${0}"
+printf 'Ready for imaging.\n'
