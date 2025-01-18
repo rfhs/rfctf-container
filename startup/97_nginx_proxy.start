@@ -55,3 +55,4 @@ docker run -d --rm --userns host --network host \
   -v "${WEBROOT}":/var/www/rfhscontestant:ro \
   -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:ro \
   --name rfhs-nginx nginx:latest
+sleep 10

@@ -160,6 +160,8 @@ server {
 }
 EOF
 
+sleep 10
+
 if [ "${HAVE_CERTS}" = "false" ]; then
   # we didn't have certs but by now we should
   docker exec rfhs-nginx nginx -s reload
