@@ -64,6 +64,10 @@ if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
   printf 'Found more than one set of kernel sources, please manually clean them up before snapshotting.\n'
   exit 1
 fi
+if [ "$(find /lib/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
+  printf 'Found more than one set of kernel modules, please manually clean them up before snapshotting.\n'
+  exit 1
+fi
 
 # pull latest images for everything, after cleaning up to ensure there is space
 for image in $(docker image ls | grep '^rfhs' | awk '{print $1}') 'certbot/certbot' nginx; do
