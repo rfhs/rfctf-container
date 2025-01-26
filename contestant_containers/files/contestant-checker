@@ -22,25 +22,14 @@ if [ "${1:-}" = "excessive" ]; then
   fi
 fi
 
-# First we check startup services worked
-# Or we would, except EXITED looks the same success or failure so there is no point
-# In this case it's safe, because ssh won't come up unless these two succeeded
-#for exited in sshdir sshkeys; do
-#	if [ "$(supervisorctl status ${exited} | awk '{print $2}')" != "EXITED" ]; then
-#		supervisorctl status
-#		exit 1
-#	fi
-#done
-
 # Next we check runtime services think they are running
-for running in sshd X11 xfce x11vnc novnc; do
-  if [ "$(supervisorctl status ${running} | awk '{print $2}')" != "RUNNING" ]; then
-    printf 'Something is wrong with service %s\n' "${running}"
-    supervisorctl status | tee -a /root/HEALTHCHECK_DEGRADED
-    notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
-    exit 1
-  fi
-done
+# sshdir and sshkeys don't have to be checked, only sshd
+if [ "$(supervisorctl status sshd X11 xfce x11vnc novnc | grep -c 'RUNNING')" -lt "5" ]; then
+  printf 'Something is wrong with one of our services.\n'
+  supervisorctl status sshd X11 xfce x11vnc novnc | tee -a /root/HEALTHCHECK_DEGRADED
+  notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
+  exit 1
+fi
 
 # Then we check the expected listening ports are actually listening
 for port in 22 8080; do
