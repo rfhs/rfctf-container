@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.34"
+VERS="0.35"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
