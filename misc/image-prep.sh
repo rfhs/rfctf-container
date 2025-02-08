@@ -35,9 +35,9 @@ if [ -x "$(command -v portageq 2>&1)" ]; then
 fi
 
 # cleanup some undesired logs
-for i in cloud-init.log cloud-init-output.log amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log portage/elog/summary.log; do
+for i in cloud-init.log cloud-init-output.log amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log portage/elog/summary.logi emerge.log rc.log docker.log containerd/containerd.log; do
   if [ -e "/var/log/${i}" ]; then
-    rm "/var/log/${i}"
+    truncate -s0 "/var/log/${i}"
   fi
 done
 
