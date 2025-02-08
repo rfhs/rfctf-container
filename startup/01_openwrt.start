@@ -24,5 +24,5 @@ fi
 
 "$(dirname "${0}")"/rfhs-container-init
 
-printf '%s takes time to start, sleeping 2.5 minutes...\n' "${CONTAINER_NAME}"
-sleep 150
+printf '%s takes time to start, sleeping 3 minutes...\n' "${CONTAINER_NAME}"
+sleep 180

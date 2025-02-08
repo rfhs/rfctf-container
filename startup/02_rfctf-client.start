@@ -9,4 +9,6 @@ export CONTAINER_PHYS
 export CONTAINER_NETWORKS=""
 
 "$(dirname "${0}")"/rfhs-container-init
-sleep 20
+
+printf '%s takes time to start, sleeping 1 minute...\n' "${CONTAINER_NAME}"
+sleep 60
