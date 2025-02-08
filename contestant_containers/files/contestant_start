@@ -2,7 +2,7 @@
 
 super_patient_start() {
   if [ -z "${1:-}" ]; then
-    printf "I am not super patient enough to start a service with being told which one...\n"
+    printf "I am not super patient enough to start a service without being told which one...\n"
     exit 1
   fi
   status="$(supervisorctl status "${1}" | awk '{print $2}')"
