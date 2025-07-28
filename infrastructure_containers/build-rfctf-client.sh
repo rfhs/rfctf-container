@@ -111,15 +111,7 @@ create_ns_link
 for phy in ${CONTAINER_PHYS}; do
   while true; do
     if iw phy "${phy}" info > /dev/null 2>&1; then
-      unset driver
-      driver="$(awk -F'=' '{print $2}' "/sys/class/ieee80211/${phy}/device/uevent")"
-      if [ 'mac80211_hwsim' = "${driver}" ]; then
-        printf "Found %s, moving it into %s\n" "${phy}" "${CONTAINER_NAME}"
-        break
-      else
-        printf "Requested phy is using %s driver instead of the expected mac80211_hwsim.  Failing safe.\n" "${driver}"
-        exit 1
-      fi
+      break
     fi
     printf "Unable to find %s, waiting...\n" "${phy}"
     sleep 1
@@ -128,7 +120,7 @@ for phy in ${CONTAINER_PHYS}; do
   sleep 1
   sudo iw phy "${phy}" set netns name "${CONTAINER_NAME}"
 done
-sleep 120
+sleep 90
 if docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
   docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
   if [ "$(hostname)" = "Nu" ] ; then
