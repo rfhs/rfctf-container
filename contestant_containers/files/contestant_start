@@ -7,6 +7,7 @@ super_patient_start() {
   fi
   status="$(supervisorctl status "${1}" | awk '{print $2}')"
   if [ "${status}" = "STOPPED" ]; then
+    printf 'Starting %s...\n' "${1}"
     # One start only, Vasily...
     # Services are set to autorestart so one start only should be fine
     supervisorctl start "${1}"
@@ -18,7 +19,7 @@ super_patient_start() {
     printf "%s service is not running yet, it is currently %s\n" "${1}" "${status}"
     sleep 1 
   done
-
+  printf 'Started %s.\n' "${1}"
 }
 
 if [ ! -d '/run/sshd' ]; then
