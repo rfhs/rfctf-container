@@ -8,7 +8,7 @@ if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]
 	exit 1
 fi
 docker pull docker.io/pentoolinux/pentoo-core:latest
-docker build --no-cache . --pull -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 docker run -d --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
 printf "Sleeping 30 seconds so services have time to start up...\n"
