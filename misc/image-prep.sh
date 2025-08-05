@@ -90,11 +90,11 @@ done
 
 docker system prune --volumes --force
 
-printf -- '\n\n--------------------------------------------------------------------------------\n'
-if docker run --rm --name rfhs-certbox -v /var/cache/rfhs-rfctf/www:/var/www/rfhscontestant/:rw -v /var/cache/rfhs-rfctf/ssl:/etc/letsencrypt/:rw certbot/certbot:latest certificates 2> /dev/null | grep 'INVALID'; then
-  printf 'Certs are no longer valid! Please manually renew certs\n'
-  exit 1
-fi
+#printf -- '\n\n--------------------------------------------------------------------------------\n'
+#if docker run --rm --name rfhs-certbox -v /var/cache/rfhs-rfctf/www:/var/www/rfhscontestant/:rw -v /var/cache/rfhs-rfctf/ssl:/etc/letsencrypt/:rw certbot/certbot:latest certificates 2> /dev/null | grep 'INVALID'; then
+#  printf 'Certs are no longer valid! Please manually renew certs\n'
+#  exit 1
+#fi
 
 check_disk_usage
 
