@@ -49,12 +49,12 @@ EXPOSE 8080/tcp
 ENV DISPLAY=:0
 
 COPY files/preschool-tiny.words /root/preschool-tiny.words
-COPY files/supervisord-pentoo.conf /etc/supervisord/supervisord.conf
+COPY files/supervisord-pentoo.conf /etc/supervisord.conf
 COPY files/contestant-checker /usr/local/sbin/contestant-checker
 COPY files/contestant_start /usr/local/sbin/contestant_start
 
 WORKDIR /root
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
 
 HEALTHCHECK --interval=300s --start-period=120s --retries=2 CMD /usr/local/sbin/contestant-checker
