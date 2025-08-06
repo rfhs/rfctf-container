@@ -28,4 +28,4 @@ WORKDIR /root/leeloodallasmultipass/
 COPY files/supervisord-client.conf /etc/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "--pidfile", "/run/supervisord.pid"]
 ENTRYPOINT []
-HEALTHCHECK --interval=300s --start-period=660s --retries=2 CMD ./ldm_checker
+HEALTHCHECK --interval=60s --start-period=660s --retries=2 CMD ./ldm_checker

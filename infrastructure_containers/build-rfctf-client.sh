@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-VERS="1.1"
+VERS="1.2"
 DISTRO="rfctf-client"
 docker pull docker.io/pentoolinux/pentoo-core
 docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
