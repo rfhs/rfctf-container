@@ -3,7 +3,7 @@ set -e
 VERS="1.1"
 DISTRO="rfctf-sdr"
 docker pull docker.io/pentoolinux/pentoo-core
-docker build . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 if docker run --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO} ./challengectl.py --test --flagfile flags.txt.ci --devicefile devices.txt.ci; then
   if [ "$(hostname)" = "Nu" ] ; then
