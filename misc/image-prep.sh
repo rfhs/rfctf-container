@@ -6,7 +6,7 @@ set -e
 check_disk_usage() {
   used="$(df -h / --output=pcent | tail -n1 | awk -F'%' '{gsub(/ /, "", $0); print $1}')"
   if [ "${used}" -gt '80' ]; then
-    printf 'FATAL: Disk is too full, disk must be below 80% and is currently %s%%\n' "${used}"
+    printf 'FATAL: Disk is too full, disk must be below 80%% and is currently %s%%\n' "${used}"
     exit 1
   else
     printf 'INFO: Used disk space is %s%%\n' "${used}"
