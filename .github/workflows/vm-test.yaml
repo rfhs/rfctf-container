@@ -21,6 +21,7 @@ jobs:
     -
       name: vm test
       run: |
+        cd startup
         ./00_radio_init.start
         ./01_openwrt.start*
         ./02_rfctf-client.start
