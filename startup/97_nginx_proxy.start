@@ -54,5 +54,7 @@ docker run -d --rm --userns host --network host \
   -v "${NGINX_CONFDIR}":/etc/nginx/conf.d/:ro \
   -v "${WEBROOT}":/var/www/rfhscontestant:ro \
   -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:ro \
+  --health-cmd "curl --fail http://${FQDN} && curl --fail https://${FQDN}" \
+  --health-interval=60s --health-retries=1 --health-start-period=30s \
   --name rfhs-nginx nginx:latest
 sleep 10
