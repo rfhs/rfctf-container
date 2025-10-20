@@ -1,0 +1,33 @@
+name: Test VM Start
+
+on:
+  push:
+
+jobs:
+  vm-test:
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    -
+      name: List changed files
+      run: git diff-tree --no-commit-id --name-only -r ${{ github.sha }}
+    -
+      name: vm test
+      run: |
+        ./00_radio_init.start
+        ./01_openwrt.start*
+        ./02_rfctf-client.start
+        ./03_pentoo-contestant.start
+        ./04_kali-contestant.start
+        ./05_parrot-contestant.start
+        ./06_blackarch-contestant.start
+        sleep 10m
+        healthy="$(docker ps --filter health=healthy --format '{{ .ID }}')"
+        [ "${healthy}" = '6' ] || exit 1
