@@ -1,0 +1,81 @@
+#!/bin/sh
+set -eux
+
+# First we install packages we need
+missing=""
+if [ ! -x "$(command -v docker)" ]; then
+  missing=" docker.io"
+fi
+if [ -n "${missing:-}" ]; then
+  apt-get update
+  apt-get  install ${missing}
+fi
+
+# Then we setup our startup sequence
+[ ! -d '/etc/local.d' ] && mkdir -p /etc/local.d
+for i in $(pwd)/../startup/*; do
+  if [ "${i}" = "$(pwd)/../startup/*" ]; then
+    continue
+  fi
+  # RFHS runs the sdr sender seperately but this does work
+  if [ "${i}" = "$(pwd)/../startup/07_rfctf-sdr.start" ]; then
+    continue
+  fi
+  ln -s "${i}" /etc/local.d/
+done
+
+if [ ! -f '/etc/rc.local' ]; then
+  cat <<- EOF > /etc/rc.local
+#!/bin/sh
+for i in /etc/local.d/*.start; do
+  if [ "${i}" = '/etc/local.d/*.start' ]; then
+    continue
+  fi
+  if [ -x "${i}" ]; then
+    "${i}"
+  fi
+done
+EOF
+fi
+
+if [ ! -x '/etc/rc.local' ]; then
+  chmod 755 /etc/rc.local
+fi
+
+if [ ! -f '/etc/systemd/system/rc-local.service' ]; then
+  cat <<- EOF > /etc/systemd/system/rc-local.service
+[Unit]
+Description=/etc/rc.local Support
+ConditionPathExists=/etc/rc.local
+
+[Service]
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+
+# Now we grab the docker images we need
+for i in $(pwd)/../startup/0*; do
+  if [ "${i}" = "$(pwd)/../startup/0*" ]; then
+    continue
+  fi
+  unset image
+  image="$(grep CONTAINER_IMAGE ${i} | cut -d'"' -f2)"
+  if [ "${i}" = 'rfhs/rfctf-sdr' ]; then
+    continue
+  fi
+  if [ -z "${image:-}" ]; then
+    continue
+  fi
+  printf 'Pulling %s\n' "${image}"
+  docker pull "${image}"
+done
+docker pull certbot/certbox
+docker pull nginx
+fi

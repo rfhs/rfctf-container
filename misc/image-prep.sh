@@ -1,7 +1,15 @@
 #!/bin/sh
-# This script is used before creating the game image to clean up the master
+# This script is used before creating the game image to clean up the source image
 
 set -e
+set -u
+
+distro="$(lsb_release --id 2>&1 | awk '/Distributor ID:/ {print $3}')"
+if [ "${distro}" = "Ubuntu" ]; then
+  distro='debianlike'
+elif [ "${distro}" = "Debian" ]; then
+  distro='debianlike'
+fi
 
 check_disk_usage() {
   used="$(df -h / --output=pcent | tail -n1 | awk -F'%' '{gsub(/ /, "", $0); print $1}')"
@@ -24,14 +32,20 @@ docker system prune --volumes --force
 # cleanup unneeded gentoo files leftover from upgrading
 if [ -x "$(command -v portageq 2>&1)" ]; then
   DISTDIR="$(portageq envvar DISTDIR)"
-  if [ -d "${DISTDIR}" ]; then
+  if [ -d "${DISTDIRi:-}" ]; then
     rm -rf "${DISTDIR:?}"/*
   fi
   PKGDIR="$(portageq envvar PKGDIR)"
-  if [ -d "${PKGDIR}" ]; then
+  if [ -d "${PKGDIR:-}" ]; then
     rm -rf "${PKGDIR:?}"/*
   fi
   rm -rf "$(portageq envvar PORTAGE_TMPDIR)"/portage/*
+fi
+#cleanup unneeded debian-like files leftover from upgrading
+if [ "${distro}" = "debianlike" ]; then
+  apt-get autoremove --purge -y
+  apt-get clean
+  rm -rf /var/lib/apt/lists/*
 fi
 
 # cleanup some undesired logs
@@ -70,13 +84,24 @@ fi
 ## We check if the star cert is valid after the docker pulls so we can see the output easier
 
 # Check if old kernels are still there
-if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
-  printf 'Found more than one set of kernel sources, please manually clean them up before snapshotting.\n'
-  exit 1
-fi
-if [ "$(find /lib/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
-  printf 'Found more than one set of kernel modules, please manually clean them up before snapshotting.\n'
-  exit 1
+if [ "${distro}" = "Gentoo" ]; then
+  if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
+    printf 'Found more than one set of kernel sources, please manually clean them up before snapshotting.\n'
+    exit 1
+  fi
+  if [ "$(find /lib/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 1 ]; then
+    printf 'Found more than one set of kernel modules, please manually clean them up before snapshotting.\n'
+    exit 1
+  fi
+elif [ "${distro}" = "debianlike" ]; then
+  if [ "$(find /usr/src/ -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 4 ]; then
+    printf 'Found more than one set of kernel sources, please manually clean them up before snapshotting.\n'
+    exit 1
+  fi
+  if [ "$(find /lib/modules -mindepth 1 -maxdepth 1 -type d | wc -l)" -gt 4 ]; then
+    printf 'Found more than one set of kernel modules, please manually clean them up before snapshotting.\n'
+    exit 1
+  fi
 fi
 
 check_disk_usage
@@ -111,8 +136,12 @@ if [ -x "$(command -v cloud-init 2>&1)" ]; then
     printf 'cloud-init clean failed\n'
     exit 1
   fi
-  if [ "$(cloud-init status)" = "status: not run" ]; then
-    #printf 'cloud-init status "not run", safe to continue\n'
+  ci_status="$(cloud-init status)"
+  if [ "${ci_status:-}" = "status: not run" ]; then
+    printf 'cloud-init status "not run", safe to continue\n'
+    true
+  elif [ "${ci_status:-}" = "status: not started" ]; then
+    printf 'cloud-init status "not started", safe to continue\n'
     true
   else
     printf 'cloud-init clean worked but status is wrong\n'
