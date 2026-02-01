@@ -1,0 +1,37 @@
+#!/bin/sh
+
+ci_status="$(cloud-init status)"
+
+f_exit() {
+  printf "cloud-init %s\n" "${ci_status:-}"
+
+  if [ "${ci_status:-}" = "status: not run" ]; then
+    printf "Ready for imaging.\n"
+  else
+    printf "NOT READY FOR IMAGING!!!\n"
+    printf "DO NOT SNAPSHOT THIS VM!\n"
+  fi
+}
+
+trap f_exit exit
+
+if pgrep -f rfhs_checker > /dev/null; then
+	printf "rfhs_checker running, sleeping 5 seconds for status\n"
+	sleep 5
+fi
+if [ -f /var/cache/rfhs-rfctf/shared_persistent_storage/AP_status ]; then
+	cat /var/cache/rfhs-rfctf/shared_persistent_storage/AP_status
+	printf "\n"
+fi
+
+printf "cloud-init %s\n" "${ci_status:-}"
+
+if [ -f /etc/rfctf-contestant ]; then
+	cat /etc/rfctf-contestant
+else
+	printf '/etc/rfctf-contestant MISSING!!!\n'
+fi
+
+docker ps
+:
+

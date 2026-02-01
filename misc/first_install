@@ -21,7 +21,7 @@ for i in $(pwd)/../startup/*; do
   if [ "${i}" = "$(pwd)/../startup/07_rfctf-sdr.start" ]; then
     continue
   fi
-  ln -s "${i}" /etc/local.d/
+  ln -snf "${i}" /etc/local.d/
 done
 
 if [ ! -f '/etc/rc.local' ]; then
@@ -59,6 +59,7 @@ SysVStartPriority=99
 WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
+fi
 
 # Now we grab the docker images we need
 for i in $(pwd)/../startup/0*; do
@@ -76,6 +77,52 @@ for i in $(pwd)/../startup/0*; do
   printf 'Pulling %s\n' "${image}"
   docker pull "${image}"
 done
-docker pull certbot/certbox
+docker pull certbot/certbot
 docker pull nginx
+
+# Prep some useful info for users logging in
+get_homedir() {
+  if [ -z "${1:-}" ]; then
+    printf 'get_homedir called without arguement, fatal.\n'
+    exit 1
+  fi
+  awk -F':' "/${1}/{print \$6}" /etc/passwd
+}
+
+get_shell() {
+  if [ -z "${1:-}" ]; then
+    printf 'get_shell called without arguement, fatal.\n'
+    exit 1
+  fi
+  user_shell="$(awk -F':' "/${1}/{print \$7}" /etc/passwd)"
+  if [ "${user_shell:-}" = '/bin/bash' ]; then
+    printf '.bashrc'
+  elif [ "${user_shell:-}" = '/bin/zsh' ]; then
+    printf '.zshrc'
+  else
+    printf 'Detected unsupported shell %s, please add support for configuring dot file.\n' "${user_shell:-}"
+    exit 1
+  fi
+}
+
+dot_file='bad'
+if [ -n "${SUDO_USER:-}" ]; then
+  if ! grep profile_status "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"; then
+    echo '/root/rfctf-container/misc/profile_status' >> "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"
+    dot_file='good'
+  else
+    dot_file='good'
+  fi
+elif [ -n "${USER:-}" ]; then
+  if ! grep profile_status "$(get_homedir ${USER})/$(get_shell ${USER})"; then
+    echo '/root/rfctf-container/misc/profile_status' >> "$(get_homedir ${USER})/$(get_shell ${USER})"
+    dot_file='good'
+  else
+    dot_file='good'
+  fi
 fi
+if [ "${dot_file}" = 'bad' ]; then
+  printf 'Unable to automatically add profile_status to your shell environment.  You should call "profile_status" from your dot file\n'
+  exit 1
+fi
+exit 0
