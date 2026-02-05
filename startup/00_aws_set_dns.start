@@ -1,6 +1,8 @@
 #!/bin/bash
 
 if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+  # XXX: Add a check for aws and a useful error here
+
   # Retrieve a token for subsequent requests
   TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
 

@@ -33,6 +33,8 @@ create_ns_link() {
   mount -o bind "/proc/${PID}/ns/net" "/run/netns/${CONTAINER_NAME}"
 }
 
+# XXX: add a check for iw here and a useful error message
+
 # shellcheck disable=SC2153
 for CONTAINER_NETWORK in ${CONTAINER_NETWORKS}; do
   if [ -z "$(docker network ls  --filter name="${CONTAINER_NETWORK}" --format '{{ .ID }}')" ]; then

@@ -7,6 +7,8 @@ set -eux
 
 . "$(dirname "${0}")"/rfhs-helpers.sh
 
+# Add a check for mac80211_hwsim and a useful error message here
+
 if lsmod | grep -q mac80211_hwsim; then
   printf "Resetting magic pretend wifi cards...\n"
   modprobe -r mac80211_hwsim

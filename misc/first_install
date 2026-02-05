@@ -6,9 +6,13 @@ missing=""
 if [ ! -x "$(command -v docker)" ]; then
   missing=" docker.io"
 fi
+if [ ! -x "$(command -v iw)" ]; then
+  missing=" iw"
+fi
+# XXX: add a check for mac80211_hwsim
 if [ -n "${missing:-}" ]; then
   apt-get update
-  apt-get  install ${missing}
+  apt-get -y install ${missing}
 fi
 
 # Then we setup our startup sequence
@@ -28,11 +32,11 @@ if [ ! -f '/etc/rc.local' ]; then
   cat <<- EOF > /etc/rc.local
 #!/bin/sh
 for i in /etc/local.d/*.start; do
-  if [ "${i}" = '/etc/local.d/*.start' ]; then
+  if [ "\${i}" = '/etc/local.d/*.start' ]; then
     continue
   fi
-  if [ -x "${i}" ]; then
-    "${i}"
+  if [ -x "\${i}" ]; then
+    "\${i}"
   fi
 done
 EOF
@@ -105,24 +109,41 @@ get_shell() {
   fi
 }
 
+# Make a fake /etc/rfctf-contestant stub
+cat <<- EOF > /etc/rfctf-contestant
+SQS_RESPONSE_QUEUE=https://sqs.us-east-1.amazonaws.com/666/totally-fake.fifo
+FQDN=UNPROVISIONED.contestant.rfhackers.com
+TRANSACTION_ID=66666666-6666-6666-6666-666666666666
+EOF
+
 dot_file='bad'
+if [ ! -d /usr/local/bin ]; then
+  mkdir -p /usr/local/bin
+fi
+cp /root/rfctf-container/misc/rfctf_status /usr/local/bin
 if [ -n "${SUDO_USER:-}" ]; then
-  if ! grep profile_status "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"; then
-    echo '/root/rfctf-container/misc/profile_status' >> "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"
+  if ! grep rfctf_status "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"; then
+    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"
     dot_file='good'
   else
     dot_file='good'
   fi
 elif [ -n "${USER:-}" ]; then
-  if ! grep profile_status "$(get_homedir ${USER})/$(get_shell ${USER})"; then
-    echo '/root/rfctf-container/misc/profile_status' >> "$(get_homedir ${USER})/$(get_shell ${USER})"
+  if ! grep rfctf_status "$(get_homedir ${USER})/$(get_shell ${USER})"; then
+    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir ${USER})/$(get_shell ${USER})"
     dot_file='good'
   else
     dot_file='good'
   fi
 fi
+if ! grep rfctf_status "$(get_homedir root)/$(get_shell root)"; then
+  echo '/usr/local/bin/rfctf_status' >> "$(get_homedir root)/$(get_shell root)"
+  dot_file='good'
+else
+  dot_file='good'
+fi
 if [ "${dot_file}" = 'bad' ]; then
-  printf 'Unable to automatically add profile_status to your shell environment.  You should call "profile_status" from your dot file\n'
+  printf "Unable to automatically add profile_status to your shell environment.  You should call 'profile_status' from your shell's dot file\n"
   exit 1
 fi
 exit 0
