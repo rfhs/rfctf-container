@@ -7,7 +7,10 @@ set -eux
 
 . "$(dirname "${0}")"/rfhs-helpers.sh
 
-# Add a check for mac80211_hwsim and a useful error message here
+if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
+  printf 'Required mac80211_hwsim kernel module is not available.  Did you forget to run first_install?\n'
+  exit 1
+fi
 
 if lsmod | grep -q mac80211_hwsim; then
   printf "Resetting magic pretend wifi cards...\n"

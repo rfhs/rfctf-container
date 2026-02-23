@@ -1,17 +1,17 @@
 #!/bin/bash
 
 if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
-  # XXX: Add a check for aws and a useful error here
-
   # Retrieve a token for subsequent requests
   TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
+  if [ -z "${TOKEN:-}" ]; then
+    printf 'Token not found, are we sure we are in AWS?\n'
+    exit 1
+  fi
 
   # Extract information about the Instance
   INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/instance-id/)
   AZ=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
   MY_IP=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" -s http://169.254.169.254/latest/meta-data/public-ipv4/)
-
-  #DOCUMENT=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance)
 
   # Extract tags associated with instance
   ZONE_TAG=$(aws ec2 describe-tags --region "${AZ::-1}" --filters "Name=resource-id,Values=${INSTANCE_ID}" --query 'Tags[?Key==`HOSTED_ZONE`].Value' --output text)

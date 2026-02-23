@@ -9,7 +9,13 @@ fi
 if [ ! -x "$(command -v iw)" ]; then
   missing=" iw"
 fi
-# XXX: add a check for mac80211_hwsim
+if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
+  if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+    missing=" linux-modules-extra-aws"
+  else
+    missing=" linux-modules-extra"
+  fi
+fi
 if [ -n "${missing:-}" ]; then
   apt-get update
   apt-get -y install ${missing}
@@ -145,5 +151,16 @@ fi
 if [ "${dot_file}" = 'bad' ]; then
   printf "Unable to automatically add profile_status to your shell environment.  You should call 'profile_status' from your shell's dot file\n"
   exit 1
+fi
+
+# add user to docker group
+if [ -n "${SUDO_USER:-}" ]; then
+  if ! grep "${SUDO_USER}" /etc/group 2>&1 | grep -q 'docker:x:' 2> /dev/null; then
+    gpasswd -a "${SUDO_USER}" docker
+  fi
+elif [ -n "${USER:-}" ]; then
+  if ! grep "${USER}" /etc/group 2>&1 | grep -q 'docker:x:' 2> /dev/null; then
+    gpasswd -a "${USER}" docker
+  fi
 fi
 exit 0
