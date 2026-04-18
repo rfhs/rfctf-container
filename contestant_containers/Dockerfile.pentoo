@@ -15,6 +15,7 @@ RUN sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   # end temporary hack
   echo 'xfce-base/xfce4-meta -upower' >> /etc/portage/profile/package.use/pentoo && \
   # go is needed for termshark but has a dep loop
+  if [ -z "$(portageq match / 'dev-lang/go')" ]; then emerge -1 dev-lang/go-bootstrap; fi && \
   emerge --getbinpkgonly=y --buildpkg=n --jobs=$(nproc) dev-lang/go --oneshot && \
   # install binary web browsers so they are preferred
   echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf && \
