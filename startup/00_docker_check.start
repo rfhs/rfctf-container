@@ -1,0 +1,22 @@
+#!/bin/sh
+if [ "$(awk -F. '{print $1}' /proc/uptime)" -lt 60 ]; then
+  sleepy_tyme=$(( 60 - $(awk -F. '{print $1}' /proc/uptime) ))
+  printf "System boot still very fresh, sleeping for %s seconds before starting openwrt...\n" "${sleepy_tyme}"
+  sleep "${sleepy_tyme}"
+fi
+if [ -x /etc/init.d/containerd ]; then
+  /etc/init.d/containerd status || /etc/init.d/containerd restart
+  sleep 1
+fi
+if [ -x /etc/init.d/docker ]; then
+  /etc/init.d/docker status || /etc/init.d/docker restart
+  sleep 1
+fi
+if [ -x "$(command -v docker)" ]; then
+  if ! docker info; then
+    sleep 20
+  fi
+  if ! docker info; then
+    shutdown -r +1 # Reboots in 1 minute
+  fi
+fi
