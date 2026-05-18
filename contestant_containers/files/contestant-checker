@@ -22,6 +22,9 @@ if [ "${1:-}" = "excessive" ]; then
   fi
 fi
 
+# Truncate the file before writing so we only have one pass worth of errors
+truncate -s0 /root/HEALTHCHECK_DEGRADED
+
 # Next we check runtime services think they are running
 # sshdir and sshkeys don't have to be checked, only sshd
 if [ "$(supervisorctl status sshd X11 xfce x11vnc novnc | grep -c 'RUNNING')" -lt "5" ]; then
@@ -34,7 +37,7 @@ fi
 # Then we check the expected listening ports are actually listening
 for port in 22 8080; do
   if ! ss -nlt | grep -q "0.0.0.0:${port}"; then
-    printf 'Nothing is listening on port %s\n' "${port}" | tee /root/HEALTHCHECK_DEGRADED
+    printf 'Nothing is listening on port %s\n' "${port}" | tee -a /root/HEALTHCHECK_DEGRADED
     ss -nltp | tee -a /root/HEALTHCHECK_DEGRADED
     notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
     exit 1
