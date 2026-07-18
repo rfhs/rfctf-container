@@ -1,12 +1,9 @@
 FROM docker.io/parrotsec/core:latest
 RUN \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
-  echo 'deb https://deb.parrotsec.io/parrot echo main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/parrot.list && \
-  echo 'deb https://deb.parrotsec.io/direct/parrot echo-security main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/parrot.list && \
-  echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/parrot.list && \
-  echo 'deb https://deb.parrotsec.io/parrot echo main contrib non-free non-free-firmware' > /etc/apt/sources.list && \
-  echo 'deb https://deb.parrotsec.io/direct/parrot echo-security main contrib non-free non-free-firmware' > /etc/apt/sources.list && \
-  echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' > /etc/apt/sources.list && \
+  echo 'deb https://deb.parrotsec.io/parrot echo main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/parrotsec.list && \
+  echo 'deb https://deb.parrotsec.io/direct/parrot echo-security main contrib non-free non-free-firmware' >> /etc/apt/sources.list.d/parrotsec.list && \
+  echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' >> /etc/apt/sources.list.d/parrotsec.list && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
   # missing parrot-desktop-xfce kismet, urh, gr-lora_sdr nrsc5
