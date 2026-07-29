@@ -4,13 +4,17 @@ set -eu
 
 # Check for required packages/commands being installed
 if [ "${1:-}" = "excessive" ]; then
-  if [ ! -x "$(command -v notify-send 2>&1)" ]; then
-    printf 'notify-send required but not found\n'
-    exit 1
-  fi
   if [ ! -x "$(command -v supervisorctl 2>&1)" ]; then
     printf 'supervisorctl required but not found\n'
     exit 1
+  fi
+  if [ ! -x "$(command -v notify-send 2>&1)" ]; then
+    printf 'notify-send required but not found\n'
+    exit 1
+  else
+    printf 'Testing notify-send...\n'
+    notify-send 'Notify-send' 'Works' --icon=dialog-information
+    printf 'Test passed\n'
   fi
   if [ ! -x "$(command -v aircrack-ng 2>&1)" ]; then
     printf 'aircrack-ng required but not found\n'
