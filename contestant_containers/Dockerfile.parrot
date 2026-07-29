@@ -16,7 +16,12 @@ RUN \
   #make clean && \
   cd /etc/hostapd-mana/certs && \
   rm ca.pem csr.csr dhparam.pem server.key server.pem && \
-  sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+  sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config && \
+  # "fix" xfce panel
+  rm -f /usr/share/desktop-base/profiles/xdg-config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
+  rm -f /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
+  rm -f /usr/lib/parrot-skel/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
+  rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
 
 # Expose needed ports
 EXPOSE 22/tcp
