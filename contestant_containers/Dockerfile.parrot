@@ -6,16 +6,14 @@ RUN \
   echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' >> /etc/apt/sources.list.d/parrotsec.list && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
-  # missing parrot-desktop-xfce kismet, urh, gr-lora_sdr nrsc5
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap freeradius-wpe hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin -y --allow-remove-essential && \
-  # hack around broken metapackages for kismet and parrot-desktop-xfce
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends xfce4 kismet-core kismet-doc kismet-logtools kismet-capture-linux-wifi xfce4-terminal xfce4-screenshooter xfce4-whiskermenu-plugin xfce4-places-plugin xfce4-taskmanager xfce4-systemload-plugin xfce4-power-manager-plugins mousepad ristretto thunar network-manager-gnome parrot-displaymanager -y --allow-remove-essential && \
+  # missing/broken urh, gr-lora_sdr, nrsc5a, freeradius-wpe
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce -y --allow-remove-essential && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   rm -f /etc/ssh/ssh_host_* && \
-  cd /etc/freeradius-wpe/3.0/certs && \
-  make clean && \
+  #cd /etc/freeradius-wpe/3.0/certs && \
+  #make clean && \
   cd /etc/hostapd-mana/certs && \
   rm ca.pem csr.csr dhparam.pem server.key server.pem && \
   sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
