@@ -7,7 +7,7 @@ RUN \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
   # missing/broken urh, gr-lora_sdr, nrsc5a, freeradius-wpe
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd -y --allow-remove-essential && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
@@ -21,7 +21,10 @@ RUN \
   rm -f /usr/share/desktop-base/profiles/xdg-config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
   rm -f /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
   rm -f /usr/lib/parrot-skel/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
-  rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+  rm -f /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml && \
+  # "fix" xfce backdrop
+  rm /usr/share/backgrounds/xfce/xfce-x.svg && \
+  ln -s /usr/share/wallpapers/EchoWallpaper/contents/images/1920x1080.png /usr/share/backgrounds/xfce/xfce-x.svg
 
 # Expose needed ports
 EXPOSE 22/tcp
