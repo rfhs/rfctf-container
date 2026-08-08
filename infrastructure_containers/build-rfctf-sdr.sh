@@ -1,5 +1,9 @@
 #!/bin/sh
-set -e
+set -eu
+if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s)" ]; then
+  printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
+  exit 1
+fi
 VERS="1.3"
 DISTRO="rfctf-sdr"
 docker pull docker.io/pentoolinux/pentoo-core

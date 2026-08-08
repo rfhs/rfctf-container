@@ -1,5 +1,9 @@
 #!/bin/sh
 set -e
+if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s)" ]; then
+  printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
+  exit 1
+fi
 VERS="0.42"
 DISTRO="pentoo"
 #./make_gentoo_cache.sh
