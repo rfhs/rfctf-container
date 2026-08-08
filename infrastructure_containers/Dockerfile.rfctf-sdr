@@ -23,7 +23,7 @@ RUN sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && 
 RUN [ -z "$(portageq match / '<net-wireless/bladerf-firmware-2.6.0')" ]
 RUN [ -z "$(portageq match / '<net-wireless/bladerf-fpga-0.16.0')" ]
 RUN [ -z "$(portageq match / '<net-wireless/gnuradio-3.11_pre20260615-r1')" ]
-RUN [ -z "$(portageq match / '<net-wireless/gr-tenna-0.0_p20260506" ]
+RUN [ -z "$(portageq match / '<net-wireless/gr-tenna-0.0_p20260506')" ]
 
 # setup challengectl
 ADD "https://api.github.com/repos/rfhs/challengectl/commits?per_page=1" latest_commit
