@@ -87,7 +87,8 @@ jobs:
           sudo chown "$(id -u):$(id -g)" "${DIRECTORY}/portage_and_overlay.tar.xz"
           ls -l --time-style=+%FT%T%z "${DIRECTORY}/portage_and_overlay.tar.xz"
 
-      # in linux-modules-extra before runner kernel 7.0; fail rather than skip the test without it
+      # The runner's Azure kernel has cfg80211 and mac80211 in linux-modules-extra
+      # but, from 6.17, no mac80211_hwsim; fail rather than skip the test without it
       - name: Set up mac80211_hwsim
         if: inputs.hwsim
         run: |
@@ -96,8 +97,15 @@ jobs:
           if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
             sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" || true
           fi
+          if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
+            sudo apt-get install -y --no-install-recommends "linux-headers-$(uname -r)"
+            "${GITHUB_WORKSPACE}/infrastructure_containers/tools/build_mac80211_hwsim.sh" "${RUNNER_TEMP}"
+            sudo install -D -m 644 "${RUNNER_TEMP}/mac80211_hwsim.ko" "/lib/modules/$(uname -r)/updates/mac80211_hwsim.ko"
+            sudo depmod -a
+          fi
           if ! sudo modprobe mac80211_hwsim radios=2; then
             echo "::error::mac80211_hwsim can't be loaded on this runner (kernel $(uname -r)), so the test can't run"
+            sudo dmesg | tail -n 5
             exit 1
           fi
           sudo airmon-ng

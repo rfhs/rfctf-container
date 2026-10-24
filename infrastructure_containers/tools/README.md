@@ -93,3 +93,29 @@ docker run --rm -v "$PWD:/work" -w /work docker.io/pentoolinux/pentoo-core:lates
 ```
 
 It takes about three minutes and prints PASS or FAIL for each check.
+
+## build_mac80211_hwsim.sh
+
+Builds `mac80211_hwsim.ko` for a kernel that has cfg80211 and mac80211 as
+modules but not mac80211_hwsim, from the kernel.org source of the same
+version. The rfctf-client test on GitHub's runners needs it: their Azure
+kernels are built without wireless drivers from 6.17 on. The workflow runs
+it when `modinfo mac80211_hwsim` fails. By hand, with the kernel's headers
+installed, from `infrastructure_containers`:
+
+```sh
+./tools/build_mac80211_hwsim.sh /tmp      # writes /tmp/mac80211_hwsim.ko
+```
+
+`KVER` builds for another installed kernel and `UPSTREAM` sets the
+kernel.org version, which by default comes from `/proc/version_signature`
+on Ubuntu, else from the kernel's major.minor. It needs make, gcc and curl.
+To check that it builds for a runner kernel (`uname -r` in the job log)
+without a runner:
+
+```sh
+docker run --rm -v "$PWD/tools:/t:ro" ubuntu:24.04 sh -c '
+  apt-get update && apt-get install -y --no-install-recommends \
+    linux-headers-6.17.0-1022-azure make gcc libc6-dev curl ca-certificates kmod &&
+  KVER=6.17.0-1022-azure /t/build_mac80211_hwsim.sh /tmp && modinfo /tmp/mac80211_hwsim.ko'
+```
