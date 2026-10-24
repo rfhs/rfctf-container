@@ -61,3 +61,8 @@ This script sets up the software defined radio challenges.  It is NOT currently 
 
 ## Is it working?
 After you run all the following commands check if the expected docker containers are running with `docker ps`
+
+## Building the images
+Each image has a build script next to its Dockerfile (`contestant_containers/build-*`, `infrastructure_containers/build-*`) which builds it, tests it, and only pushes from the RFHS build hosts.
+rfctf-client and rfctf-sdr share their first stage (`rfctf-minimal`), so their build scripts only skip the cache for each image's own stage: built on the same host, the second one reuses those layers instead of building and pushing its own copy.
+The pentoo based images build from `portage_and_overlay.tar.xz`, a snapshot of the Gentoo and Pentoo trees made by `make_gentoo_cache.sh`.  The Dockerfiles only mount the tree while they install packages, so it is never part of an image.

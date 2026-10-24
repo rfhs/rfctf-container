@@ -1,29 +1,33 @@
-FROM docker.io/pentoolinux/pentoo-core:latest
+FROM scratch AS portage
 ADD portage_and_overlay.tar.xz /
 
+# Keep this stage identical in Dockerfile.rfctf-client and Dockerfile.rfctf-sdr: both images share its layers
+FROM docker.io/pentoolinux/pentoo-core:latest AS rfctf-minimal
 # setup FEATURES and use flags
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
-
-# install the minimal metapackage
-RUN sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl rfctf-minimal#' /etc/portage/make.conf && \
-  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfctf-client && \
+# --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into these layers
+RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl rfctf-minimal#' /etc/portage/make.conf && \
+  # install the minimal metapackage
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
+  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc}/*
 
+FROM rfctf-minimal AS rfctf-sdr
 # install the actual metapackage
-ADD portage_and_overlay.tar.xz /
-RUN sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && \
-  emerge --getbinpkg=y --buildpkg=n --jobs=$(nproc) --deep --update --newuse pentoo/rfctf-client && \
+RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles}/* /var/db/repos/* /usr/share/{man,doc}/*
-RUN [ -z "$(portageq match / '<net-wireless/bladerf-firmware-2.6.0')" ]
-RUN [ -z "$(portageq match / '<net-wireless/bladerf-fpga-0.16.0')" ]
-RUN [ -z "$(portageq match / '<net-wireless/gnuradio-3.11_pre20260615-r1')" ]
-RUN [ -z "$(portageq match / '<net-wireless/gr-tenna-0.0_p20260506')" ]
+  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc}/*
+RUN portageq has_version / '>=net-wireless/bladerf-firmware-2.6.0'
+RUN portageq has_version / '>=net-wireless/bladerf-fpga-0.16.0'
+RUN portageq has_version / '>=net-wireless/gnuradio-3.11_pre20260615-r1'
+RUN portageq has_version / '>=net-wireless/gr-tenna-0.0_p20260506'
 
 # setup challengectl
 ADD "https://api.github.com/repos/rfhs/challengectl/commits?per_page=1" latest_commit

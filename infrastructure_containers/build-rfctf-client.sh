@@ -7,7 +7,7 @@ fi
 VERS="1.2"
 DISTRO="rfctf-client"
 docker pull docker.io/pentoolinux/pentoo-core
-docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
+docker build --no-cache-filter "${DISTRO}" . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 
 ## You know what all the cool kids like?  CI!  Time to test like a boss
 # This is probably unsafe AND requires root.  I'd rather CI than no CI though, so for now it's happening
