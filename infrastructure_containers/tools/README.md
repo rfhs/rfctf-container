@@ -34,7 +34,7 @@ script.
 
 ```sh
 ./make_gentoo_cache.sh               # writes ./portage_and_overlay.tar.xz
-# anywhere without the Gentoo and Pentoo keyrings:
+# anywhere without the Gentoo and Pentoo keyrings (CI does this):
 docker run --rm -v "$PWD:/work" -w /work docker.io/pentoolinux/pentoo-core:latest ./make_gentoo_cache.sh
 ```
 

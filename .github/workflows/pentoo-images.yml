@@ -1,0 +1,108 @@
+name: Pentoo images
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - infrastructure_containers/**
+      - startup/rfhs-helpers.sh
+      - startup/tests/**
+      - contestant_containers/Dockerfile.pentoo
+      - contestant_containers/build-pentoo
+      - contestant_containers/make_gentoo_cache.sh
+      - contestant_containers/files/**
+      - .github/workflows/pentoo-images.yml
+      - .github/workflows/build-image.yml
+  pull_request:
+    paths: *paths
+  # The binhost and pentoo-core move on without any change here.
+  schedule:
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  tree:
+    name: Gentoo and Pentoo trees
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      mtime: ${{ steps.snapshot.outputs.mtime }}
+    defaults:
+      run:
+        working-directory: infrastructure_containers
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Test make_gentoo_cache.sh
+        run: |
+          docker run --rm -v "${PWD}:/work" -w /work \
+            docker.io/pentoolinux/pentoo-core:latest ./tools/test_make_gentoo_cache.sh
+
+      # Fails when the binhost's trees are over a week old, which stops every image job
+      - name: Snapshot the trees the binhost was built from
+        id: snapshot
+        run: |
+          docker run --rm -v "${PWD}:/work" -w /work \
+            docker.io/pentoolinux/pentoo-core:latest ./make_gentoo_cache.sh
+          # the container wrote it as root; chown keeps its time
+          sudo chown "$(id -u):$(id -g)" portage_and_overlay.tar.xz
+          mtime="$(stat -c %Y portage_and_overlay.tar.xz)"
+          printf 'Tree time: %s\n' "$(date -u -d "@${mtime}")"
+          ls -l portage_and_overlay.tar.xz
+          sha256sum portage_and_overlay.tar.xz
+          echo "mtime=${mtime}" >> "${GITHUB_OUTPUT}"
+
+      # Already xz compressed.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: portage-tree
+          path: infrastructure_containers/portage_and_overlay.tar.xz
+          compression-level: 0
+          retention-days: 3
+          if-no-files-found: error
+
+  pentoo:
+    needs: tree
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: contestant_containers
+      script: build-pentoo
+      tree-mtime: ${{ needs.tree.outputs.mtime }}
+      startup-wait: '120'
+
+  rfctf-client:
+    needs: tree
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: infrastructure_containers
+      script: build-rfctf-client.sh
+      tree-mtime: ${{ needs.tree.outputs.mtime }}
+      hwsim: true
+      startup-wait: '180'
+
+  rfctf-sdr:
+    needs: tree
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: infrastructure_containers
+      script: build-rfctf-sdr.sh
+      tree-mtime: ${{ needs.tree.outputs.mtime }}
+
+  fosphor_knob:
+    needs: tree
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: infrastructure_containers
+      script: build-fosphor_knob
+      tree-mtime: ${{ needs.tree.outputs.mtime }}
+      extra-test: ../startup/tests/fosphor_knob_start_test.sh rfhs/fosphor_knob:latest
+      extra-packages: xvfb xauth

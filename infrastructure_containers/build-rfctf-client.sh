@@ -124,7 +124,7 @@ for phy in ${CONTAINER_PHYS}; do
   sleep 1
   sudo iw phy "${phy}" set netns name "${CONTAINER_NAME}"
 done
-sleep 90
+sleep "${STARTUP_WAIT:-90}"
 if docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
   docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
   if [ "$(hostname)" = "Nu" ] ; then
@@ -134,6 +134,8 @@ if docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
   exit_code=0
 else
   printf "rfhs_checker failed!\n"
+  # the container is removed when it stops, so show its logs now
+  docker logs --tail 200 "${CONTAINER_NAME}" || true
   exit_code=1
 fi
 docker stop "${CONTAINER_NAME}"

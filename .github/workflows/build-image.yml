@@ -1,0 +1,138 @@
+# The build scripts only push from the RFHS build hosts, never from CI
+name: Build and test an image
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: The build context, which holds the build script
+        type: string
+        required: true
+      script:
+        description: The build script, run as is
+        type: string
+        required: true
+      tree-mtime:
+        description: >-
+          Unix time of the Gentoo and Pentoo trees. When set, the tree
+          tarball from the calling workflow's portage-tree artifact is put in
+          the build context with this time, which the build scripts check.
+        type: string
+        default: ''
+      hwsim:
+        description: The test needs mac80211_hwsim radios and the host's airmon-ng, iw and rfkill
+        type: boolean
+        default: false
+      startup-wait:
+        description: Seconds the test waits for the container to start (STARTUP_WAIT); empty keeps the script's own
+        type: string
+        default: ''
+      timeout-minutes:
+        type: number
+        default: 360
+      extra-test:
+        description: A test run from the build context after the build script, with the image it built
+        type: string
+        default: ''
+      extra-packages:
+        description: Ubuntu packages extra-test needs on the runner
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ inputs.script }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.directory }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Free disk space
+        working-directory: /
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache /usr/local/share/boost /usr/share/swift /usr/lib/jvm \
+            /usr/local/julia* /opt/microsoft /opt/google /opt/az /usr/local/share/powershell \
+            /usr/local/share/chromium
+          docker system prune --all --force
+          df -h /
+
+      - name: Download the tree tarball
+        if: inputs.tree-mtime != ''
+        uses: actions/download-artifact@v8
+        with:
+          name: portage-tree
+          path: ${{ inputs.directory }}
+
+      # Artifacts don't keep the file's time.
+      - name: Restore the tree tarball's time
+        if: inputs.tree-mtime != ''
+        env:
+          TREE_MTIME: ${{ inputs.tree-mtime }}
+        run: |
+          touch -d "@${TREE_MTIME}" portage_and_overlay.tar.xz
+          ls -l --time-style=+%FT%T%z portage_and_overlay.tar.xz
+
+      # in linux-modules-extra before runner kernel 7.0; fail rather than skip the test without it
+      - name: Set up mac80211_hwsim
+        if: inputs.hwsim
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aircrack-ng ethtool iw rfkill
+          if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
+            sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" || true
+          fi
+          if ! sudo modprobe mac80211_hwsim radios=2; then
+            echo "::error::mac80211_hwsim can't be loaded on this runner (kernel $(uname -r)), so the test can't run"
+            exit 1
+          fi
+          sudo airmon-ng
+          sudo modprobe -r mac80211_hwsim
+
+      - name: Build and test
+        env:
+          SCRIPT: ${{ inputs.script }}
+          STARTUP_WAIT: ${{ inputs.startup-wait }}
+        run: ./"${SCRIPT}"
+
+      - name: Extra test
+        if: inputs.extra-test != ''
+        env:
+          EXTRA_TEST: ${{ inputs.extra-test }}
+          EXTRA_PACKAGES: ${{ inputs.extra-packages }}
+        run: |
+          if [ -n "${EXTRA_PACKAGES}" ]; then
+            sudo apt-get update
+            # shellcheck disable=SC2086
+            sudo apt-get install -y --no-install-recommends ${EXTRA_PACKAGES}
+          fi
+          sh -c "${EXTRA_TEST}"
+
+      # On failure the contestant scripts leave rfhs-<distro>-ci running.
+      - name: Show the containers
+        if: failure()
+        run: |
+          docker ps -a
+          for c in $(docker ps -aq); do
+            echo "::group::$(docker inspect -f '{{.Name}}' "${c}")"
+            docker logs --tail 300 "${c}" 2>&1 || true
+            docker exec "${c}" sh -c '
+              for cfg in /etc/supervisord.conf /etc/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf; do
+                if [ -f "${cfg}" ]; then supervisorctl -c "${cfg}" status; break; fi
+              done
+              for f in /root/HEALTHCHECK_DEGRADED /var/log/supervisord.log; do
+                if [ -s "${f}" ]; then echo "== ${f}"; tail -n 100 "${f}"; fi
+              done' 2>&1 || true
+            echo "::endgroup::"
+          done
+          docker image ls
+          df -h /
