@@ -1,4 +1,5 @@
-# The build scripts only push from the RFHS build hosts, never from CI
+# The build scripts only push to Docker Hub from the RFHS build hosts; with
+# publish, this pushes to GitHub Container Registry
 name: Build and test an image
 
 on:
@@ -12,13 +13,12 @@ on:
         description: The build script, run as is
         type: string
         required: true
-      tree-mtime:
+      snapshot:
         description: >-
-          Unix time of the Gentoo and Pentoo trees. When set, the tree
-          tarball from the calling workflow's portage-tree artifact is put in
-          the build context with this time, which the build scripts check.
-        type: string
-        default: ''
+          Make portage_and_overlay.tar.xz in the build context first, with
+          infrastructure_containers/make_gentoo_cache.sh in pentoo-core
+        type: boolean
+        default: false
       hwsim:
         description: The test needs mac80211_hwsim radios and the host's airmon-ng, iw and rfkill
         type: boolean
@@ -38,9 +38,16 @@ on:
         description: Ubuntu packages extra-test needs on the runner
         type: string
         default: ''
+      publish:
+        description: >-
+          On main, push the image the build script tagged to
+          ghcr.io/<owner>/<DISTRO> as <VERS> and latest; the calling workflow
+          has to grant packages: write
+        type: boolean
+        default: false
 
-permissions:
-  contents: read
+# No permissions here: a called workflow can't raise them, so each image's
+# workflow sets its own, with packages: write only where it publishes.
 
 jobs:
   build:
@@ -66,21 +73,19 @@ jobs:
           docker system prune --all --force
           df -h /
 
-      - name: Download the tree tarball
-        if: inputs.tree-mtime != ''
-        uses: actions/download-artifact@v8
-        with:
-          name: portage-tree
-          path: ${{ inputs.directory }}
-
-      # Artifacts don't keep the file's time.
-      - name: Restore the tree tarball's time
-        if: inputs.tree-mtime != ''
+      # Fails when the binhost's trees are over a week old
+      - name: Snapshot the trees the binhost was built from
+        if: inputs.snapshot
+        working-directory: .
         env:
-          TREE_MTIME: ${{ inputs.tree-mtime }}
+          DIRECTORY: ${{ inputs.directory }}
         run: |
-          touch -d "@${TREE_MTIME}" portage_and_overlay.tar.xz
-          ls -l --time-style=+%FT%T%z portage_and_overlay.tar.xz
+          docker run --rm -v "${PWD}:/work" -w /work/infrastructure_containers \
+            docker.io/pentoolinux/pentoo-core:latest \
+            ./make_gentoo_cache.sh "/work/${DIRECTORY}/portage_and_overlay.tar.xz"
+          # the container wrote it as root; chown keeps its time
+          sudo chown "$(id -u):$(id -g)" "${DIRECTORY}/portage_and_overlay.tar.xz"
+          ls -l --time-style=+%FT%T%z "${DIRECTORY}/portage_and_overlay.tar.xz"
 
       # in linux-modules-extra before runner kernel 7.0; fail rather than skip the test without it
       - name: Set up mac80211_hwsim
@@ -116,6 +121,26 @@ jobs:
             sudo apt-get install -y --no-install-recommends ${EXTRA_PACKAGES}
           fi
           sh -c "${EXTRA_TEST}"
+
+      # The label links a new package to this repository, which gives this
+      # repository's workflows write access to it.
+      - name: Publish to GitHub Container Registry
+        if: inputs.publish && github.ref == 'refs/heads/main'
+        env:
+          SCRIPT: ${{ inputs.script }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          distro="$(sed -n 's/^DISTRO="\(.*\)"$/\1/p' "${SCRIPT}")"
+          vers="$(sed -n 's/^VERS="\(.*\)"$/\1/p' "${SCRIPT}")"
+          : "${distro:?no DISTRO= in ${SCRIPT}}" "${vers:?no VERS= in ${SCRIPT}}"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${distro}"
+          printf '%s\n' "${GITHUB_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          printf 'FROM rfhs/%s:%s\n' "${distro}" "${vers}" | docker build \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            -t "${image}:${vers}" -t "${image}:latest" -
+          docker push "${image}:${vers}"
+          docker push "${image}:latest"
+          echo "Published ${image}:${vers} and ${image}:latest" >> "${GITHUB_STEP_SUMMARY}"
 
       # On failure the contestant scripts leave rfhs-<distro>-ci running.
       - name: Show the containers

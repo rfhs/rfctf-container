@@ -1,0 +1,37 @@
+name: pentoo
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - contestant_containers/Dockerfile.pentoo
+      - contestant_containers/build-pentoo
+      - contestant_containers/files/*.words
+      - contestant_containers/files/supervisord-pentoo.conf
+      - contestant_containers/files/contestant-checker
+      - contestant_containers/files/contestant_start
+      - infrastructure_containers/make_gentoo_cache.sh
+      - .github/workflows/pentoo.yml
+      - .github/workflows/build-image.yml
+  pull_request:
+    paths: *paths
+  # The binhost and pentoo-core move on without any change here.
+  schedule:
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: contestant_containers
+      script: build-pentoo
+      snapshot: true
+      startup-wait: '120'

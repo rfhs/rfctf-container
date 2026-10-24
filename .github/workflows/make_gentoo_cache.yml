@@ -1,0 +1,38 @@
+name: make_gentoo_cache.sh
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - infrastructure_containers/make_gentoo_cache.sh
+      - infrastructure_containers/tools/test_make_gentoo_cache.sh
+      - .github/workflows/make_gentoo_cache.yml
+  pull_request:
+    paths: *paths
+  # The test uses the live gentoo-mirror and pentoo-overlay repositories and keys.
+  schedule:
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: test_make_gentoo_cache.sh
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Test make_gentoo_cache.sh
+        working-directory: infrastructure_containers
+        run: |
+          docker run --rm -v "${PWD}:/work" -w /work \
+            docker.io/pentoolinux/pentoo-core:latest ./tools/test_make_gentoo_cache.sh

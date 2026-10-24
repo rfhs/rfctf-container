@@ -1,0 +1,38 @@
+name: kali
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - contestant_containers/Dockerfile.kali
+      - contestant_containers/build-kali
+      - contestant_containers/files/*.words
+      - contestant_containers/files/supervisord-debianish.conf
+      - contestant_containers/files/contestant-checker
+      - contestant_containers/files/contestant_start
+      - .github/workflows/kali.yml
+      - .github/workflows/build-image.yml
+  pull_request:
+    paths: *paths
+  # Rolling distributions break without any change here.
+  schedule:
+    - cron: '47 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: contestant_containers
+      script: build-kali
+      startup-wait: '120'
+      timeout-minutes: 180
+      publish: true

@@ -1,0 +1,32 @@
+name: rfctf-sdr
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - infrastructure_containers/Dockerfile.rfctf-sdr
+      - infrastructure_containers/build-rfctf-sdr.sh
+      - infrastructure_containers/make_gentoo_cache.sh
+      - .github/workflows/rfctf-sdr.yml
+      - .github/workflows/build-image.yml
+  pull_request:
+    paths: *paths
+  # The binhost and pentoo-core move on without any change here.
+  schedule:
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: infrastructure_containers
+      script: build-rfctf-sdr.sh
+      snapshot: true

@@ -1,0 +1,38 @@
+name: fosphor_knob
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - infrastructure_containers/Dockerfile.fosphor_knob
+      - infrastructure_containers/build-fosphor_knob
+      - infrastructure_containers/tests/fosphor_knob_selftest.py
+      - infrastructure_containers/make_gentoo_cache.sh
+      - startup/rfhs-helpers.sh
+      - startup/tests/fosphor_knob_start_test.sh
+      - startup/tests/fosphor_knob_container_check.py
+      - .github/workflows/fosphor_knob.yml
+      - .github/workflows/build-image.yml
+  pull_request:
+    paths: *paths
+  # The binhost and pentoo-core move on without any change here.
+  schedule:
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      directory: infrastructure_containers
+      script: build-fosphor_knob
+      snapshot: true
+      extra-test: ../startup/tests/fosphor_knob_start_test.sh rfhs/fosphor_knob:latest
+      extra-packages: xvfb xauth

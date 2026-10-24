@@ -1,28 +1,27 @@
-# The pentoo contestant image is built in pentoo-images.yml
-name: Contestant images
+name: parrot
 
 on:
   push:
     branches: [main]
     paths: &paths
-      - contestant_containers/Dockerfile.kali
       - contestant_containers/Dockerfile.parrot
-      - contestant_containers/Dockerfile.blackarch
-      - contestant_containers/build-kali
       - contestant_containers/build-parrot
-      - contestant_containers/build-blackarch
-      - contestant_containers/files/**
-      - .github/workflows/contestant-images.yml
+      - contestant_containers/files/*.words
+      - contestant_containers/files/supervisord-debianish.conf
+      - contestant_containers/files/contestant-checker
+      - contestant_containers/files/contestant_start
+      - .github/workflows/parrot.yml
       - .github/workflows/build-image.yml
   pull_request:
     paths: *paths
   # Rolling distributions break without any change here.
   schedule:
-    - cron: '47 4 * * 2'
+    - cron: '47 5 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,13 +29,10 @@ concurrency:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        distro: [kali, parrot, blackarch]
     uses: ./.github/workflows/build-image.yml
     with:
       directory: contestant_containers
-      script: build-${{ matrix.distro }}
+      script: build-parrot
       startup-wait: '120'
       timeout-minutes: 180
+      publish: true
