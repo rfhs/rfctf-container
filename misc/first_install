@@ -4,26 +4,27 @@ set -eux
 # First we install packages we need
 missing=""
 if [ ! -x "$(command -v docker)" ]; then
-  missing=" docker.io"
+  missing="${missing} docker.io"
 fi
 if [ ! -x "$(command -v iw)" ]; then
-  missing=" iw"
+  missing="${missing} iw"
 fi
 if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
   if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
-    missing=" linux-modules-extra-aws"
+    missing="${missing} linux-modules-extra-aws"
   else
-    missing=" linux-modules-extra"
+    missing="${missing} linux-modules-extra"
   fi
 fi
 if [ -n "${missing:-}" ]; then
   apt-get update
+  # shellcheck disable=SC2086
   apt-get -y install ${missing}
 fi
 
 # Then we setup our startup sequence
 [ ! -d '/etc/local.d' ] && mkdir -p /etc/local.d
-for i in $(pwd)/../startup/*; do
+for i in "$(pwd)"/../startup/*; do
   if [ "${i}" = "$(pwd)/../startup/*" ]; then
     continue
   fi
@@ -76,12 +77,12 @@ systemctl daemon-reload
 fi
 
 # Now we grab the docker images we need
-for i in $(pwd)/../startup/0*; do
+for i in "$(pwd)"/../startup/0*; do
   if [ "${i}" = "$(pwd)/../startup/0*" ]; then
     continue
   fi
   unset image
-  image="$(grep CONTAINER_IMAGE ${i} | cut -d'"' -f2)"
+  image="$(grep CONTAINER_IMAGE "${i}" | cut -d'"' -f2)"
   if [ "${image}" = 'rfhs/rfctf-sdr' ]; then
     continue
   fi
@@ -135,15 +136,15 @@ if [ ! -d /usr/local/bin ]; then
 fi
 cp /root/rfctf-container/misc/rfctf_status /usr/local/bin
 if [ -n "${SUDO_USER:-}" ]; then
-  if ! grep rfctf_status "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"; then
-    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir ${SUDO_USER})/$(get_shell ${SUDO_USER})"
+  if ! grep rfctf_status "$(get_homedir "${SUDO_USER}")/$(get_shell "${SUDO_USER}")"; then
+    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir "${SUDO_USER}")/$(get_shell "${SUDO_USER}")"
     dot_file='good'
   else
     dot_file='good'
   fi
 elif [ -n "${USER:-}" ]; then
-  if ! grep rfctf_status "$(get_homedir ${USER})/$(get_shell ${USER})"; then
-    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir ${USER})/$(get_shell ${USER})"
+  if ! grep rfctf_status "$(get_homedir "${USER}")/$(get_shell "${USER}")"; then
+    echo '/usr/local/bin/rfctf_status' >> "$(get_homedir "${USER}")/$(get_shell "${USER}")"
     dot_file='good'
   else
     dot_file='good'

@@ -13,7 +13,7 @@ f_exit() {
   fi
 }
 
-trap f_exit exit
+trap f_exit EXIT
 
 if pgrep -f rfhs_checker > /dev/null; then
 	printf "rfhs_checker running, sleeping 5 seconds for status\n"

@@ -47,7 +47,8 @@ findFreeInterface() {
         IW_ERROR="$(iw phy "${PHYDEV}" interface add "wlan${i}${target_suffix}" type __ap 2>&1)"
         if [ -z "${IW_ERROR}" ]; then
           if [ -d "/sys/class/ieee80211/${PHYDEV}/device/net" ]; then
-            for j in $(ls /sys/class/ieee80211/${PHYDEV}/device/net/); do
+            for j in "/sys/class/ieee80211/${PHYDEV}/device/net/"*; do
+              j="${j##*/}"
               if [ "$(cat "/sys/class/ieee80211/${PHYDEV}/device/net/${j}/type")" = "${target_type}" ]; then
                 #here is where we catch udev renaming our interface
                 k=${j#wlan}

@@ -5,7 +5,7 @@ if [ ! -r "/etc/rfctf-contestant" ]; then
   printf '/etc/rfctf-contestant should contain key data but the file is missing\n'
   exit 1
 fi
-if [ "$(awk -F'=' '{print $2}' /etc/rfctf-contestant | wc -l)" -lt 3 ];
+if [ "$(awk -F'=' '{print $2}' /etc/rfctf-contestant | wc -l)" -lt 3 ]; then
   printf '/etc/rfctf-contestant should contain key data but some data is missing\n'
   exit 1
 fi

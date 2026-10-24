@@ -27,8 +27,7 @@ rfkill_check() {
 	if [ -z "$index" ]; then
 		return 187
 	fi
-	rfkill_status="$(sudo rfkill list "${index}" 2>&1)"
-	if [ $? != 0 ]; then
+	if ! rfkill_status="$(sudo rfkill list "${index}" 2>&1)"; then
 		printf "rfkill error: %s\n" "${rfkill_status}"
 		return 187
 	elif [ -z "${rfkill_status}" ]; then
@@ -52,8 +51,7 @@ rfkill_unblock() {
 	#attempt unblock and CHECK SUCCESS
 	#rfkill_status="$(sudo rfkill unblock "${1#phy}" 2>&1)"
 	#if [ $? != 0 ]; then
-		rfkill_status="$(sudo rfkill unblock "${index}" 2>&1)"
-		if [ $? != 0 ]; then
+		if ! rfkill_status="$(sudo rfkill unblock "${index}" 2>&1)"; then
       if [ "$(printf "%s" "${rfkill_status}" | grep -c "Usage")" -eq 1 ]; then
 				printf "Missing parameters in rfkill! Report this"
 			else
@@ -94,9 +92,7 @@ if lsmod | grep -q mac80211_hwsim; then
 fi
 sudo modprobe mac80211_hwsim radios=26
 # stop all running docker containers
-if [ -n "$(docker ps -a -q)" ]; then
-  docker stop $(docker ps -a -q)
-fi
+docker ps -a -q | xargs -r docker stop
 # remove any stopped containers which weren't removed already
 #if [ -n "$(docker ps -a -q)" ]; then
 #  docker rm $(docker ps -a -q)
