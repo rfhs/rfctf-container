@@ -147,6 +147,37 @@ else
         -v "${sps}":/root/shared_persistent_storage -v "${LOG_DIR}":/var/log \
         "${CONTAINER_IMAGE}" ./challengectl.py --flagfile current_conf.csv --devicefile devices.txt --avoidfreqsfile current_avoidfreqs.txt
     fi
+    if [ "${CONTAINER_NAME}" = "fosphor_knob" ]; then
+      case "${FOSPHOR_KNOB_MODE:-}" in
+        ''|fosphor_knob|fosphor_knob_*) ;;
+        *) printf 'FOSPHOR_KNOB_MODE=%s is not one of the fosphor_knob commands\n' "${FOSPHOR_KNOB_MODE}"; exit 1;;
+      esac
+      # --ipc=host shares the host's /dev/shm, where a killed run leaves this FIFO and breaks mkfifo
+      if [ -p /dev/shm/hackrf_sweep ]; then
+        rm -f /dev/shm/hackrf_sweep
+      fi
+      # --userns host: the devices belong to the host's root
+      fosphor_args="$(x11_docker_args "${FOSPHOR_KNOB_DISPLAY:-:0}"; gpu_docker_args; usb_input_docker_args)"
+      (
+        # one argument per line, so paths with spaces stay one argument
+        IFS='
+'
+        set -f
+        # shellcheck disable=SC2086
+        docker run -d --rm --network none --name "${CONTAINER_NAME}" \
+          --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
+          --userns host \
+          ${fosphor_args} \
+          -v "${LOG_DIR}":/var/log \
+          "${CONTAINER_IMAGE}" ${FOSPHOR_KNOB_MODE:-}
+      )
+      sleep 5
+      if [ -z "$(docker ps --filter name="^${CONTAINER_NAME}\$" --format '{{ .ID }}')" ]; then
+        printf '%s stopped right after starting. It needs a supported SDR plugged in (B205mini, bladeRF 2.0 or HackRF), and the knob for every mode but hackrf_sweep.\n' "${CONTAINER_NAME}"
+        printf 'Run this again with DEBUG=1 to see the docker command, then run that without -d to see its output.\n'
+        exit 1
+      fi
+    fi
   fi
 fi
 

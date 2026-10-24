@@ -59,6 +59,14 @@ Blackarch contestant container.  Includes four virtual wifi cards.
 ### 07_rfctf-sdr.start
 This script sets up the software defined radio challenges.  It is NOT currently usable for anyone outside RFHS due to us not releasing our transmitter framework.  We hope to release it at some point in the near future, but right now, this container is not useful for anyone else.
 
+### 08_fosphor_knob.start
+This script starts fosphor_knob, the live spectrum display we show at the RF Village, on the physical display box.  It is not for virtual games: it exits right away in a VM, and first_install neither enables it nor pulls its image.  To start it at boot on the display box, link it into /etc/local.d yourself (`ln -s "$(pwd)/08_fosphor_knob.start" /etc/local.d/`).
+It needs an X server on :0 (set FOSPHOR_KNOB_DISPLAY for another display) and waits up to 5 minutes for one at boot.  It uses the X server's own cookie, so no xhost is needed.  It also needs a supported SDR (B205mini, bladeRF 2.0 or HackRF) and, for every mode but hackrf_sweep, a Griffin PowerMate or the Waveshare knob.  The SDRs and the knob can be replugged while it runs.  It runs fosphor_knob_sponsors unless FOSPHOR_KNOB_MODE names another mode (e.g. `FOSPHOR_KNOB_MODE=fosphor_knob_uhd`).
+Any GPU works, or none:
+* Intel and AMD: it passes /dev/dri, and /dev/kfd (for ROCm) when the host has it.
+* NVIDIA: it uses the proprietary driver from the host, which requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed and docker restarted.  Without the toolkit, the script warns and fosphor_knob most likely can't use OpenGL.
+* No GPU: fosphor_knob runs on the CPU.
+
 ## Is it working?
 After you run all the following commands check if the expected docker containers are running with `docker ps`
 

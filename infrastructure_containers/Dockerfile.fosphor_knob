@@ -1,0 +1,46 @@
+FROM scratch AS portage
+ADD portage_and_overlay.tar.xz /
+
+FROM docker.io/pentoolinux/pentoo-core:latest
+
+# setup FEATURES and use flags
+RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
+
+# VIDEO_CARDS must match what the binhost's mesa and libdrm are built with.
+# Mesa and every OpenCL ICD load into fosphor together and must share one LLVM.
+RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  touch /var/tmp/layer-start && \
+  sed -i 's#-livecd#-drivers -vnc#; s#^VIDEO_CARDS=.*#VIDEO_CARDS="amdgpu intel nouveau radeon radeonsi"#' /etc/portage/make.conf && \
+  echo 'INSTALL_MASK="/usr/share/uhd/images -/usr/share/uhd/images/usrp_b205mini_fpga.bin -/usr/share/uhd/images/usrp_b200_fw.hex"' >> /etc/portage/make.conf && \
+  mkdir -p /etc/portage/package.accept_keywords && \
+  echo 'net-wireless/fosphor_knob' > /etc/portage/package.accept_keywords/fosphor_knob && \
+  # --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into this layer
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse \
+    '>=net-wireless/fosphor_knob-0.18' pentoo/pentoo-opencl && \
+  # remove build deps
+  emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # rm all the files we don't want
+  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc,info,gtk-doc,locale}/* \
+    /usr/include /usr/lib/llvm/*/{bin,include} && \
+  # only this RUN's files: the base layer can't shrink, and its libgcc.a and libc_nonshared.a are needed
+  find / -xdev -cnewer /var/tmp/layer-start \( -name '*.a' -o -name '*.opt-1.pyc' -o -name '*.opt-2.pyc' \) -delete && \
+  rm /var/tmp/layer-start && \
+  find /usr/lib/python3*/site-packages -depth -type d -name tests -exec rm -rf {} + && \
+  # nothing in here runs 32-bit code
+  scanelf -RBF '%a %F' /usr /lib | awk '$1 == "EM_386" { print $2 }' | xargs -r rm -f && \
+  # NVIDIA: the toolkit mounts the host driver's libraries, these point at them
+  mkdir -p /etc/OpenCL/vendors /usr/share/glvnd/egl_vendor.d && \
+  echo 'libnvidia-opencl.so.1' > /etc/OpenCL/vendors/nvidia.icd && \
+  echo '{"file_format_version":"1.0.0","ICD":{"library_path":"libEGL_nvidia.so.0"}}' > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+
+# The NVIDIA Container Toolkit only mounts the OpenGL libraries when asked to
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
+
+RUN portageq has_version / '>=net-wireless/fosphor_knob-0.18'
+RUN portageq has_version / '>=net-wireless/bladerf-firmware-2.6.0'
+RUN portageq has_version / '>=net-wireless/bladerf-fpga-0.16.0'
+RUN portageq has_version / '>=net-wireless/gnuradio-3.11_pre20260615-r1'
+RUN portageq has_version / '>=dev-libs/pocl-7.2'
+
+CMD ["fosphor_knob_sponsors"]
+ENTRYPOINT []

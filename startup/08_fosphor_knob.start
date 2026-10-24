@@ -1,0 +1,27 @@
+#!/bin/bash
+set -eu -o pipefail
+export DEBUG="${DEBUG:-}"
+
+export CONTAINER_NAME="fosphor_knob"
+export CONTAINER_IMAGE="rfhs/fosphor_knob"
+CONTAINER_PHYS=""
+export CONTAINER_PHYS
+export CONTAINER_NETWORKS=""
+# The X display to show it on (not DISPLAY, which an ssh -X login would set)
+export FOSPHOR_KNOB_DISPLAY="${FOSPHOR_KNOB_DISPLAY:-:0}"
+export FOSPHOR_KNOB_MODE="${FOSPHOR_KNOB_MODE:-}"
+
+. "$(dirname "${0}")"/rfhs-helpers.sh
+
+if is_vm; then
+  printf 'fosphor_knob runs on the physical display box, skipping it in a VM.\n'
+  exit 0
+fi
+
+# At boot the display manager may still be starting X
+if ! wait_for_x "${FOSPHOR_KNOB_DISPLAY}" "${FOSPHOR_KNOB_X_WAIT:-300}"; then
+  printf 'X display %s is not running, so fosphor_knob has nowhere to show. Start X (or set FOSPHOR_KNOB_DISPLAY) and run this again.\n' "${FOSPHOR_KNOB_DISPLAY}"
+  exit 1
+fi
+
+"$(dirname "${0}")"/rfhs-container-init
