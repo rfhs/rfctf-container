@@ -78,7 +78,7 @@ for i in $(pwd)/../startup/0*; do
   fi
   unset image
   image="$(grep CONTAINER_IMAGE ${i} | cut -d'"' -f2)"
-  if [ "${i}" = 'rfhs/rfctf-sdr' ]; then
+  if [ "${image}" = 'rfhs/rfctf-sdr' ]; then
     continue
   fi
   if [ -z "${image:-}" ]; then
