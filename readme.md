@@ -82,6 +82,11 @@ The pentoo based images (pentoo, rfctf-client, rfctf-sdr, fosphor_knob) build fr
 ## CI
 GitHub Actions builds and tests every image with the same build scripts used by hand.  Each image has its own workflow in `.github/workflows/` (`pentoo.yml`, `kali.yml`, `parrot.yml`, `blackarch.yml`, `rfctf-client.yml`, `rfctf-sdr.yml` and `fosphor_knob.yml`, which all call `build-image.yml`), and it runs only for changes to the files that image is built and tested from: a change to a shared file, such as `contestant_containers/files/contestant-checker`, runs every image that uses it.  `make_gentoo_cache.yml` runs `infrastructure_containers/tools/test_make_gentoo_cache.sh`.
 
+`shellcheck.yml` runs ShellCheck 0.11.0 on every push and pull request, over every tracked file with a sh, bash or dash shebang, and fails on any finding at the default severity.  `.shellcheckrc` makes it follow the scripts the startup scripts source.  To run the same check locally:
+```
+git ls-files | while read -r f; do head -n 1 -- "$f" | grep -qE '^#!.*\b(ba|da)?sh\b' && printf '%s\n' "$f"; done | xargs shellcheck
+```
+
 The Pentoo based images first run `infrastructure_containers/make_gentoo_cache.sh` in pentoo-core, to snapshot the Gentoo and Pentoo trees the binhost was built from.  If those are more than a week old the snapshot fails and the image isn't built.
 
 Each build script's test runs in the workflow: `contestant-checker excessive` for the contestant images, `ldm_checker --test` for rfctf-client, `challengectl.py --test` for rfctf-sdr, and `tests/fosphor_knob_selftest.py` for fosphor_knob, which then also gets `startup/tests/fosphor_knob_start_test.sh` (08_fosphor_knob.start's docker arguments against an Xvfb on the runner).  The rfctf-client test needs `mac80211_hwsim` radios on the runner and the host's `airmon-ng`, `iw` and `rfkill`; the workflow installs them, builds mac80211_hwsim with `infrastructure_containers/tools/build_mac80211_hwsim.sh` when the runner's kernel doesn't have it, and fails if the module can't be loaded.
