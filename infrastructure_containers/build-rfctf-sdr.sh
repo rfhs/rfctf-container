@@ -4,7 +4,7 @@ if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s
   printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
   exit 1
 fi
-VERS="1.3"
+VERS="1.4"
 DISTRO="rfctf-sdr"
 docker pull docker.io/pentoolinux/pentoo-core
 docker build --no-cache-filter "${DISTRO}" . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
