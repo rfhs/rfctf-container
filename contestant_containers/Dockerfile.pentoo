@@ -14,8 +14,8 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   echo 'net-wireless/aircrack-ng **' >> /etc/portage/profile/package.accept_keywords && \
   echo 'xfce-base/xfce4-meta -upower' >> /etc/portage/profile/package.use/pentoo && \
   # go is needed for termshark but has a dep loop
-  if [ -z "$(portageq match / 'dev-lang/go')" ]; then emerge -1 --rebuilt-binaries=n dev-lang/go-bootstrap; fi && \
-  emerge --getbinpkgonly=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) dev-lang/go --oneshot && \
+  if [ -z "$(portageq match / 'dev-lang/go')" ]; then emerge -1 --quiet --rebuilt-binaries=n dev-lang/go-bootstrap; fi && \
+  emerge --getbinpkgonly=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --quiet dev-lang/go --oneshot && \
   # install binary web browsers so they are preferred
   echo 'ACCEPT_LICENSE="google-chrome" ' >> /etc/portage/make.conf && \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot && \
@@ -24,12 +24,12 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   # install the distro wireless metapackage for aircrack-ng, hostapd, freeradius, kismet, mdk3, reaver (and pixiewps), wifite, asleap, hcxtools, hcxdumptool hcxtools
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/pentoo-wireless && \
   # sox is busted, not sure why, get an error
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=1 --deep --newuse media-sound/sox && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=1 --quiet --deep --newuse media-sound/sox && \
   # install the distro radio metapackage for gnuradio, gqrx, and gr-osmosdr
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/pentoo-radio && \
   # install the distro opencl stuff because gentoo is weird
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse dev-libs/pocl --oneshot && \
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/pentoo-opencl && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --quiet --deep --newuse dev-libs/pocl --oneshot && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --quiet --deep --newuse pentoo/pentoo-opencl && \
   # install the additional packages we want, missing gr-lora_sdr and nrsc5
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse app-crypt/hashcat www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx_improved net-wireless/urh && \
   # also depclean bdeps and deps
