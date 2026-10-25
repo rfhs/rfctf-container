@@ -8,6 +8,54 @@ if [ "${1:-}" = "excessive" ]; then
     printf 'supervisorctl required but not found\n'
     exit 1
   fi
+  printf 'Checking the tools are installed and their libraries resolve...\n'
+  missing=""
+  broken=""
+  # every distribution packages these
+  for tool in aircrack-ng airodump-ng aireplay-ng airmon-ng asleap bully hashcat hcxdumptool \
+    hcxpcapngtool hostapd-mana hostapd-wpe iw kismet macchanger mdk4 nmap pixiewps reaver tcpdump \
+    termshark tshark wash wifite wireshark wpa_passphrase wpa_supplicant; do
+    if ! tool_path="$(command -v "${tool}")"; then
+      missing="${missing} ${tool}"
+    elif ldd "${tool_path}" 2> /dev/null | grep -q 'not found'; then
+      broken="${broken} ${tool}"
+    fi
+  done
+  # only some distributions package these
+  for tool in fldigi freeradius-wpe gnuradio-companion gqrx mdk3 qsstv urh wsjtx; do
+    if tool_path="$(command -v "${tool}")" && ldd "${tool_path}" 2> /dev/null | grep -q 'not found'; then
+      broken="${broken} ${tool}"
+    fi
+  done
+  if [ -n "${missing}" ]; then
+    printf 'Missing:%s\n' "${missing}"
+  fi
+  if [ -n "${broken}" ]; then
+    printf 'Unresolved libraries:%s\n' "${broken}"
+  fi
+  if [ -n "${missing}${broken}" ]; then
+    exit 1
+  fi
+  printf 'Test passed\n'
+  printf 'Testing wpa_passphrase...\n'
+  if ! wpa_passphrase hashcat-essid 'hashcat!' | grep -q 'psk=88f43854ae7b1624fc2ab7724859e795130f4843c7535729e819cf92f39535dc$'; then
+    printf 'wpa_passphrase did not derive the expected PSK\n'
+    exit 1
+  fi
+  printf 'Test passed\n'
+  printf 'Testing tshark has the 802.11 and EAPOL dissectors...\n'
+  if [ "$(tshark -G protocols 2> /dev/null | awk -F'\t' '$3 == "wlan" || $3 == "eapol"' | wc -l)" -ne 2 ]; then
+    printf 'tshark is missing the wlan or eapol dissector\n'
+    exit 1
+  fi
+  printf 'Test passed\n'
+  printf 'Testing wifite starts...\n'
+  if ! timeout 60 wifite --help > /dev/null 2>&1; then
+    timeout 60 wifite --help 2>&1 | tail -n 5 || true
+    printf 'wifite --help failed\n'
+    exit 1
+  fi
+  printf 'Test passed\n'
   if [ ! -x "$(command -v notify-send 2>&1)" ]; then
     printf 'notify-send required but not found\n'
     exit 1
@@ -22,6 +70,24 @@ if [ "${1:-}" = "excessive" ]; then
   else
     printf 'Testing aircrack-ng for 30 seconds...\n'
     nice -n 19 aircrack-ng -S -Z 30
+    printf 'Test passed\n'
+  fi
+  if [ ! -x "$(command -v hashcat 2>&1)" ]; then
+    printf 'hashcat required but not found\n'
+    exit 1
+  else
+    # hashcat's example WPA hash, for the passphrase hashcat!; CUDA and HIP are
+    # ignored so it has to crack it with OpenCL
+    printf 'Testing hashcat with OpenCL...\n'
+    if ! hashcat_out="$(printf 'password\nhashcat!\n' | timeout 900 nice -n 19 hashcat -m 22000 -a 0 \
+      --backend-ignore-cuda --backend-ignore-hip --session contestant-checker --restore-disable \
+      --potfile-disable --logfile-disable --quiet \
+      'WPA*01*4d4fe7aac3a2cecab195321ceb99a7d0*fc690c158264*f4747f87f9f4*686173686361742d6573736964***' 2>&1)" \
+      || ! printf '%s\n' "${hashcat_out}" | grep -q ':hashcat!$'; then
+      printf '%s\n' "${hashcat_out:-}"
+      printf 'hashcat could not crack a known WPA hash with OpenCL\n'
+      exit 1
+    fi
     printf 'Test passed\n'
   fi
 fi
@@ -47,6 +113,19 @@ for port in 22 8080; do
     exit 1
   fi
 done
+
+if [ "${1:-}" = "excessive" ]; then
+  printf 'Testing noVNC serves its page and x11vnc answers...\n'
+  if ! curl -fsS -o /dev/null http://127.0.0.1:8080/vnc.html; then
+    printf 'noVNC did not serve vnc.html\n'
+    exit 1
+  fi
+  if ! python3 -c 'import socket, sys; s = socket.create_connection(("127.0.0.1", 5900), 10); sys.exit(not s.recv(12).startswith(b"RFB "))'; then
+    printf 'x11vnc did not send an RFB greeting\n'
+    exit 1
+  fi
+  printf 'Test passed\n'
+fi
 
 printf "Everything looks good.\n"
 if [ -f "/root/HEALTHCHECK_DEGRADED" ]; then
