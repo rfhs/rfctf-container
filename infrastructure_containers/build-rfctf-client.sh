@@ -100,7 +100,12 @@ docker ps -a -q | xargs -r docker stop
 
 # Get a list of the radios (a little safer than assuming)
 #CONTAINER_PHYS="phy10 phy11 phy12 phy13 phy14 phy15 phy16 phy17 phy18 phy19 phy20 phy21 phy22 phy23 phy24 phy25"
-CONTAINER_PHYS="$(sudo airmon-ng | awk '/mac80211_hwsim/ {print $1}')"
+# Not airmon-ng: before aircrack-ng f333a6a7 (not in 1.7) it takes the driver
+# from the device's uevent, which newer kernels leave empty for hwsim radios
+CONTAINER_PHYS="$(for phy in /sys/class/ieee80211/*; do
+  driver="$(readlink -f "${phy}/device/driver")"
+  if [ "${driver##*/}" = mac80211_hwsim ]; then printf '%s\n' "${phy##*/}"; fi
+done)"
 # Start the container
 docker run -d --rm --network none --name "${CONTAINER_NAME}" \
   --cap-add net_raw --cap-add net_admin \

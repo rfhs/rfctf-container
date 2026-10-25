@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       hwsim:
-        description: The test needs mac80211_hwsim radios and the host's airmon-ng, iw and rfkill
+        description: The test needs mac80211_hwsim radios and the host's iw and rfkill
         type: boolean
         default: false
       startup-wait:
@@ -93,7 +93,7 @@ jobs:
         if: inputs.hwsim
         run: |
           sudo apt-get update
-          sudo apt-get install -y aircrack-ng ethtool iw rfkill
+          sudo apt-get install -y iw rfkill
           if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
             sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" || true
           fi
@@ -108,7 +108,7 @@ jobs:
             sudo dmesg | tail -n 5
             exit 1
           fi
-          sudo airmon-ng
+          iw dev
           sudo modprobe -r mac80211_hwsim
 
       - name: Build and test
