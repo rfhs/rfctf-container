@@ -107,7 +107,7 @@ fi
 check_disk_usage
 
 # pull latest images for everything, after cleaning up to ensure there is space
-for image in $(docker image ls | grep '^rfhs' | awk '{print $1}') 'certbot/certbot' nginx; do
+for image in $(docker image ls | grep -E '^(ghcr\.io/)?rfhs/' | awk '{print $1}') 'certbot/certbot' nginx; do
   docker image prune --force
   docker pull "${image}"
   docker image prune --force

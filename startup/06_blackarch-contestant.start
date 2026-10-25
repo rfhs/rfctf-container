@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="blackarch-contestant"
-export CONTAINER_IMAGE="rfhs/blackarch"
+export CONTAINER_IMAGE="ghcr.io/rfhs/blackarch"
 CONTAINER_PHYS="$(seq 42 45)"
 export CONTAINER_PHYS
 export CONTAINER_NETWORKS="contestant"

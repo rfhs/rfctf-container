@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="kali-contestant"
-export CONTAINER_IMAGE="rfhs/kali"
+export CONTAINER_IMAGE="ghcr.io/rfhs/kali"
 CONTAINER_PHYS="$(seq 34 37)"
 export CONTAINER_PHYS
 export CONTAINER_NETWORKS="contestant"

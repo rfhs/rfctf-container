@@ -3,7 +3,7 @@ set -eu -o pipefail
 export DEBUG="${DEBUG:-}"
 
 export CONTAINER_NAME="parrot-contestant"
-export CONTAINER_IMAGE="rfhs/parrot"
+export CONTAINER_IMAGE="ghcr.io/rfhs/parrot"
 CONTAINER_PHYS="$(seq 38 41)"
 export CONTAINER_PHYS
 export CONTAINER_NETWORKS="contestant"
