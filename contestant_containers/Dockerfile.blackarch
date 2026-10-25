@@ -29,6 +29,7 @@ EXPOSE 8080/tcp
 
 # Set operable environment
 ENV DISPLAY=:0
+ENV DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus-session
 
 COPY files/2026-2027_cyberpunk.words /root/2026-2027_cyberpunk.words
 COPY files/supervisord-blackarch.conf /etc/supervisor/conf.d/supervisord.conf
