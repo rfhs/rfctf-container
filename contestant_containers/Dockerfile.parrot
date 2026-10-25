@@ -6,14 +6,16 @@ RUN \
   echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' >> /etc/apt/sources.list.d/parrotsec.list && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
-  # missing/broken urh, gr-lora_sdr, nrsc5a, freeradius-wpe
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
+  # missing urh, gr-lora_sdr, nrsc5, hashcat-utils; broken freeradius-wpe (needs bookworm's libperl5.36 and libpython3.11)
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-wpe macchanger tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   rm -f /etc/ssh/ssh_host_* && \
   #cd /etc/freeradius-wpe/3.0/certs && \
   #make clean && \
+  cd /etc/hostapd-wpe/certs && \
+  make destroycerts && \
   cd /etc/hostapd-mana/certs && \
   rm ca.pem csr.csr dhparam.pem server.key server.pem && \
   sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config && \

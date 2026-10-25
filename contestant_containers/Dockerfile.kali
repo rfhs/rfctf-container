@@ -7,9 +7,14 @@ RUN sed -i 's|http://http.kali.org/kali/|http://kali.download/kali/|' /etc/apt/s
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get dist-upgrade -y && \
   # missing urh, gr-lora_sdr, nrsc5
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y aircrack-ng asleap freeradius-wpe hostapd-wpe iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite tshark wireshark vim man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc kali-desktop-xfce dbus-x11 dialog librsvg2-common tmux tcpdump nmap iproute2 iputils-ping curl fldigi qsstv wsjtx isc-dhcp-client libnotify-bin plocate && \
-  # kali-rolling follows Debian testing, which drops gnuradio and its reverse
-  # dependencies while a library transition holds gnuradio back
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y aircrack-ng asleap freeradius-wpe hostapd-wpe iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-mana macchanger termshark tshark wireshark vim man pciutils hashcat hashcat-utils wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc kali-desktop-xfce dbus-x11 dialog librsvg2-common tmux tcpdump nmap iproute2 iputils-ping curl fldigi qsstv wsjtx isc-dhcp-client libnotify-bin plocate && \
+  # missing from kali-rolling when this was written (2026-10-25): gnuradio, gqrx-sdr and gr-osmosdr.
+  # kali-rolling follows Debian testing, which dropped them while the thrift library transition
+  # holds gnuradio back; they may return when the transition finishes. To watch it:
+  #   https://pkg.kali.org/pkg/gnuradio
+  #   https://tracker.debian.org/pkg/gnuradio
+  #   https://release.debian.org/transitions/html/auto-thrift.html
+  #   https://bugs.debian.org/1147162 (keeps thrift, and so gnuradio, out of testing)
   sdr="" && for p in gnuradio gqrx-sdr gr-osmosdr; do \
     if apt-cache policy "${p}" | grep -q '^  Candidate: [^(]'; then sdr="${sdr} ${p}"; else echo "kali-rolling has no ${p}, skipping it"; fi; \
   done && \
@@ -31,7 +36,9 @@ RUN sed -i 's|http://http.kali.org/kali/|http://kali.download/kali/|' /etc/apt/s
   cd /etc/freeradius-wpe/3.0/certs && \
   make clean && \
   cd /etc/hostapd-wpe/certs && \
-  make clean && \
+  make destroycerts && \
+  cd /etc/hostapd-mana/certs && \
+  rm ca.pem csr.csr dhparam.pem server.key server.pem && \
   touch ~/.hushlogin && \
   sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 

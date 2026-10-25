@@ -21,7 +21,7 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) www-client/google-chrome www-client/firefox-bin --oneshot && \
   # install the base distro stuff, includes wpa_supplicant
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/pentoo-core pentoo/pentoo-desktop && \
-  # install the distro wireless metapackage for aircrack-ng, hostapd, freeradius, kismet, mdk3, reaver (and pixiewps), wifite, asleap, hcxtools, hcxdumptool hcxtools
+  # install the distro wireless metapackage for aircrack-ng, hostapd (with wpe), kismet, mdk4, reaver (and pixiewps), wifite, asleap, bully, hcxtools, hcxdumptool
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/pentoo-wireless && \
   # sox is busted, not sure why, get an error
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=1 --quiet --deep --newuse media-sound/sox && \
@@ -30,8 +30,8 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   # install the distro opencl stuff because gentoo is weird
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --quiet --deep --newuse dev-libs/pocl --oneshot && \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --quiet --deep --newuse pentoo/pentoo-opencl && \
-  # install the additional packages we want, missing gr-lora_sdr and nrsc5
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse app-crypt/hashcat www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx_improved net-wireless/urh && \
+  # install the additional packages we want, missing gr-lora_sdr, nrsc5, mdk3, wifi-honey, freeradius-wpe and hashcat-utils (only keyworded ~amd64)
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse app-crypt/hashcat net-wireless/hostapd-mana www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx_improved net-wireless/urh && \
   # also depclean bdeps and deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
