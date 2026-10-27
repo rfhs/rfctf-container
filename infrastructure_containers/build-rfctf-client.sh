@@ -12,7 +12,7 @@ if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s
   printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
   exit 1
 fi
-VERS="1.4"
+VERS="1.5"
 DISTRO="rfctf-client"
 CONTAINER_NAME="rfhs-${DISTRO}-ci"
 if docker container inspect "${CONTAINER_NAME}" > /dev/null 2>&1; then
@@ -102,6 +102,8 @@ if lsmod | grep -q mac80211_hwsim; then
   sleep 5
 fi
 sudo modprobe mac80211_hwsim radios=26
+# ldm_checker --excessive checks dhcpcd on a dummy interface
+sudo modprobe dummy
 
 # Get a list of the radios (a little safer than assuming)
 #CONTAINER_PHYS="phy10 phy11 phy12 phy13 phy14 phy15 phy16 phy17 phy18 phy19 phy20 phy21 phy22 phy23 phy24 phy25"
@@ -133,7 +135,7 @@ done
 sleep "${STARTUP_WAIT:-90}"
 # there are no APs for the clients here, so the healthcheck runs as --test
 if ../tools/bench_healthcheck.sh -t 100 -x './ldm_checker --test' "${CONTAINER_NAME}" \
-  && docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
+  && docker exec "${CONTAINER_NAME}" ./ldm_checker --excessive; then
   docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push "rfhs/${DISTRO}:${VERS}"
