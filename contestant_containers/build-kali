@@ -8,7 +8,7 @@ if [ -n "${missing_tools}" ]; then
   printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
   exit 1
 fi
-VERS="0.54"
+VERS="0.53"
 DISTRO="kali"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
