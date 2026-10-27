@@ -2,6 +2,15 @@
 
 set -e
 
+missing_tools=""
+for tool in cat sleep; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
+
 if [ ! -r "/etc/rfctf-contestant" ]; then
   printf "/etc/rfctf-contestant should contain key data but the file is missing\n"
   exit 1
@@ -23,6 +32,15 @@ else
 fi
 
 if [ "${HAVE_CERTS}" = "false" ]; then
+  missing_tools=""
+  # shellcheck disable=SC2043
+  for tool in docker; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+    exit 1
+  fi
   docker run --rm --name rhfs-certbot \
     -v "${WEBROOT}":/var/www/rfhscontestant/:rw \
     -v "${CERTBOT_CONFDIR}":/etc/letsencrypt/:rw \

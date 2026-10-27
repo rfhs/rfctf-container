@@ -4,18 +4,21 @@
 #   startup/tests/fosphor_knob_start_test.sh [image]    (default rfhs/fosphor_knob)
 set -eu
 
+missing_tools=""
+for tool in awk cat dirname docker grep ls mktemp od rm sleep tr uname xauth Xvfb; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
+
 image="${1:-rfhs/fosphor_knob}"
 TEST_DISPLAY="${TEST_DISPLAY:-:97}"
 here="$(cd "$(dirname "${0}")" && pwd)"
 # shellcheck source=SCRIPTDIR/../rfhs-helpers.sh
 . "${here}/../rfhs-helpers.sh"
 
-for cmd in Xvfb xauth docker; do
-  if ! command -v "${cmd}" > /dev/null 2>&1; then
-    printf '%s is required\n' "${cmd}"
-    exit 1
-  fi
-done
 num="$(x_display_number "${TEST_DISPLAY}")"
 if [ -e "/tmp/.X11-unix/X${num}" ]; then
   printf 'Display %s is in use, pick another with TEST_DISPLAY\n' "${TEST_DISPLAY}"

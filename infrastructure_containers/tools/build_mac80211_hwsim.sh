@@ -9,6 +9,14 @@
 # comes from /proc/version_signature on Ubuntu, else from KVER's major.minor.
 set -eu
 
+missing_tools=""
+for tool in cp curl make mktemp rm uname; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 kver="${KVER:-$(uname -r)}"
 out="${1:-.}"
 upstream="${UPSTREAM:-}"

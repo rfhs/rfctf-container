@@ -6,6 +6,15 @@ if [ -n "${DEBUG}" ]; then
 	set -x
 fi
 
+missing_tools=""
+for tool in cat chown dirname docker mkdir rm sleep stat touch tr uname; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
+
 . "$(dirname "${0}")"/rfhs-helpers.sh
 
 f_exit() {
@@ -33,7 +42,16 @@ create_ns_link() {
   mount -o bind "/proc/${PID}/ns/net" "/run/netns/${CONTAINER_NAME}"
 }
 
-# XXX: add a check for iw here and a useful error message
+if [ -n "${CONTAINER_PHYS}" ]; then
+  missing_tools=""
+  for tool in awk ip iw mount mountpoint; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+    exit 1
+  fi
+fi
 
 # shellcheck disable=SC2153
 for CONTAINER_NETWORK in ${CONTAINER_NETWORKS}; do
@@ -105,6 +123,14 @@ if [ "${CONTAINER_NETWORKS}" = "contestant" ]; then
     "${CONTAINER_IMAGE}"
 else
   if [ "${CONTAINER_NAME}" = "openwrt" ]; then
+    missing_tools=""
+    for tool in find sed; do
+      command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+    done
+    if [ -n "${missing_tools}" ]; then
+      printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+      exit 1
+    fi
     # shellcheck disable=SC2046
     docker create --rm --network openwrt-eth0 --name "${CONTAINER_NAME}" \
       --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
@@ -148,6 +174,15 @@ else
         "${CONTAINER_IMAGE}" ./challengectl.py --flagfile current_conf.csv --devicefile devices.txt --avoidfreqsfile current_avoidfreqs.txt
     fi
     if [ "${CONTAINER_NAME}" = "fosphor_knob" ]; then
+      missing_tools=""
+      # shellcheck disable=SC2043
+      for tool in awk; do
+        command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+      done
+      if [ -n "${missing_tools}" ]; then
+        printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+        exit 1
+      fi
       case "${FOSPHOR_KNOB_MODE:-}" in
         ''|fosphor_knob|fosphor_knob_*) ;;
         *) printf 'FOSPHOR_KNOB_MODE=%s is not one of the fosphor_knob commands\n' "${FOSPHOR_KNOB_MODE}"; exit 1;;

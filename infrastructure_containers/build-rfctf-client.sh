@@ -1,5 +1,13 @@
 #!/bin/sh
 set -eu
+missing_tools=""
+for tool in awk date docker grep head hostname iw lsmod mountpoint readlink sleep sudo; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s)" ]; then
   printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
   exit 1

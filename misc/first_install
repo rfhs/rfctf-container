@@ -1,6 +1,15 @@
 #!/bin/sh
 set -eux
 
+missing_tools=""
+for tool in awk cat chmod cp cut grep ln mkdir modinfo; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
+
 # First we install packages we need
 missing=""
 if [ ! -x "$(command -v docker)" ]; then
@@ -17,6 +26,15 @@ if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
   fi
 fi
 if [ -n "${missing:-}" ]; then
+  missing_tools=""
+  # shellcheck disable=SC2043
+  for tool in apt-get; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+    exit 1
+  fi
   apt-get update
   # shellcheck disable=SC2086
   apt-get -y install ${missing}

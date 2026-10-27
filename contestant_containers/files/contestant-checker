@@ -2,10 +2,14 @@
 
 set -eu
 
-# Check for required packages/commands being installed
 if [ "${1:-}" = "excessive" ]; then
-  if [ ! -x "$(command -v supervisorctl 2>&1)" ]; then
-    printf 'supervisorctl required but not found\n'
+  # what the healthcheck and these tests run, besides the tools checked below
+  missing_tools=""
+  for tool in awk cat curl grep ldd nice notify-send python3 rm ss supervisorctl tail tee timeout wc; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
     exit 1
   fi
   printf 'Checking the tools are installed and their libraries resolve...\n'
@@ -56,40 +60,25 @@ if [ "${1:-}" = "excessive" ]; then
     exit 1
   fi
   printf 'Test passed\n'
-  if [ ! -x "$(command -v notify-send 2>&1)" ]; then
-    printf 'notify-send required but not found\n'
+  printf 'Testing notify-send...\n'
+  notify-send 'Notify-send' 'Works' --icon=dialog-information
+  printf 'Test passed\n'
+  printf 'Testing aircrack-ng for 30 seconds...\n'
+  nice -n 19 aircrack-ng -S -Z 30
+  printf 'Test passed\n'
+  # hashcat's example WPA hash, for the passphrase hashcat!; CUDA and HIP are
+  # ignored so it has to crack it with OpenCL
+  printf 'Testing hashcat with OpenCL...\n'
+  if ! hashcat_out="$(printf 'password\nhashcat!\n' | timeout 900 nice -n 19 hashcat -m 22000 -a 0 \
+    --backend-ignore-cuda --backend-ignore-hip --session contestant-checker --restore-disable \
+    --potfile-disable --logfile-disable --quiet \
+    'WPA*01*4d4fe7aac3a2cecab195321ceb99a7d0*fc690c158264*f4747f87f9f4*686173686361742d6573736964***' 2>&1)" \
+    || ! printf '%s\n' "${hashcat_out}" | grep -q ':hashcat!$'; then
+    printf '%s\n' "${hashcat_out:-}"
+    printf 'hashcat could not crack a known WPA hash with OpenCL\n'
     exit 1
-  else
-    printf 'Testing notify-send...\n'
-    notify-send 'Notify-send' 'Works' --icon=dialog-information
-    printf 'Test passed\n'
   fi
-  if [ ! -x "$(command -v aircrack-ng 2>&1)" ]; then
-    printf 'aircrack-ng required but not found\n'
-    exit 1
-  else
-    printf 'Testing aircrack-ng for 30 seconds...\n'
-    nice -n 19 aircrack-ng -S -Z 30
-    printf 'Test passed\n'
-  fi
-  if [ ! -x "$(command -v hashcat 2>&1)" ]; then
-    printf 'hashcat required but not found\n'
-    exit 1
-  else
-    # hashcat's example WPA hash, for the passphrase hashcat!; CUDA and HIP are
-    # ignored so it has to crack it with OpenCL
-    printf 'Testing hashcat with OpenCL...\n'
-    if ! hashcat_out="$(printf 'password\nhashcat!\n' | timeout 900 nice -n 19 hashcat -m 22000 -a 0 \
-      --backend-ignore-cuda --backend-ignore-hip --session contestant-checker --restore-disable \
-      --potfile-disable --logfile-disable --quiet \
-      'WPA*01*4d4fe7aac3a2cecab195321ceb99a7d0*fc690c158264*f4747f87f9f4*686173686361742d6573736964***' 2>&1)" \
-      || ! printf '%s\n' "${hashcat_out}" | grep -q ':hashcat!$'; then
-      printf '%s\n' "${hashcat_out:-}"
-      printf 'hashcat could not crack a known WPA hash with OpenCL\n'
-      exit 1
-    fi
-    printf 'Test passed\n'
-  fi
+  printf 'Test passed\n'
 fi
 
 # Only a failing pass writes /root/HEALTHCHECK_DEGRADED, and it overwrites the

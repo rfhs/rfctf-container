@@ -6,6 +6,14 @@
 #   ./tools/test_make_gentoo_cache.sh
 #   docker run --rm -v "$PWD:/work" -w /work docker.io/pentoolinux/pentoo-core:latest ./tools/test_make_gentoo_cache.sh
 set -eu
+missing_tools=""
+for tool in awk cat cmp date dirname git grep mkdir mktemp python3 rm sed sleep sort tar; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 
 here="$(cd "$(dirname "${0}")" && pwd)"
 snapshot="${here}/../make_gentoo_cache.sh"

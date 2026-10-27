@@ -1,4 +1,12 @@
 #!/bin/sh
+missing_tools=""
+for tool in awk sleep; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
 if [ "$(awk -F. '{print $1}' /proc/uptime)" -lt 60 ]; then
   sleepy_tyme=$(( 60 - $(awk -F. '{print $1}' /proc/uptime) ))
   printf "System boot still very fresh, sleeping for %s seconds before starting openwrt...\n" "${sleepy_tyme}"
@@ -13,6 +21,15 @@ if [ -x /etc/init.d/docker ]; then
   sleep 1
 fi
 if [ -x "$(command -v docker)" ]; then
+  missing_tools=""
+  # shellcheck disable=SC2043
+  for tool in shutdown; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+    exit 1
+  fi
   if ! docker info; then
     sleep 20
   fi

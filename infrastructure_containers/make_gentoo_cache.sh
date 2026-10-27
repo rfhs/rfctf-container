@@ -47,9 +47,11 @@ too_old() {
   fi
 }
 
-for tool in git curl gpgv base64 tar xz; do
-  command -v "${tool}" > /dev/null 2>&1 || die "${tool} is required"
+missing_tools=""
+for tool in awk base64 cat chmod curl date git gpgv grep head mkdir mktemp mv rm sed tar touch tr wc xz; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
 done
+[ -z "${missing_tools}" ] || die "required commands not found:${missing_tools}"
 for key in "${GENTOO_KEY}" "${PENTOO_KEY}"; do
   if [ ! -r "${key}" ]; then
     die "can't read the signing keys ${key}; set GENTOO_KEY/PENTOO_KEY, or run this in docker.io/pentoolinux/pentoo-core"

@@ -1,5 +1,13 @@
 #!/bin/sh
 set -e
+missing_tools=""
+for tool in docker hostname sleep; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 VERS="0.52"
 DISTRO="parrot"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then

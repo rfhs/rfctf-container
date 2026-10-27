@@ -12,6 +12,14 @@ if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
   printf 'usage: %s container [checker]\n' "${0}" >&2
   exit 2
 fi
+missing_tools=""
+for tool in docker grep sed; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 c="${1}"
 checker=/usr/local/sbin/contestant-checker
 if [ -n "${2:-}" ]; then

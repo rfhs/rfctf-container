@@ -38,6 +38,14 @@ if [ "$#" -eq 0 ]; then
   printf 'usage: %s [-n runs] [-w seconds] [-t ms] [-c checker] [-x command] [-s setup] [-f] container...\n' "${0}" >&2
   exit 2
 fi
+missing_tools=""
+for tool in awk cat date docker head mktemp nproc paste rm sed seq sleep sort tail tee tr uname; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
 
 # docker's own runs of the healthcheck would land in the windows
 for c in "$@"; do
@@ -48,6 +56,15 @@ for c in "$@"; do
       exit 2
       ;;
   esac
+done
+
+# shellcheck disable=SC2016
+for c in "$@"; do
+  missing="$(docker exec "${c}" sh -c 'for t in awk cat chmod cut date head mkdir rm sort tr; do command -v "$t" > /dev/null 2>&1 || printf " %s" "$t"; done')"
+  if [ -n "${missing}" ]; then
+    printf '%s is missing commands the benchmark runs in it:%s\n' "${c}" "${missing}" >&2
+    exit 2
+  fi
 done
 
 cgroups=""

@@ -2,6 +2,16 @@
 
 set -eu
 
+missing_tools=""
+# shellcheck disable=SC2043
+for tool in docker; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+  exit 1
+fi
+
 WEBROOT='/var/cache/rfhs-rfctf/www'
 CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
 
