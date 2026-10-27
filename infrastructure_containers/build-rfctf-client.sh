@@ -4,7 +4,7 @@ if [ "$(date -r portage_and_overlay.tar.xz +%s)" -lt "$(date -d "7 days ago" +%s
   printf "portage_and_overlay.tar.xz is too old, aborting for safety\n"
   exit 1
 fi
-VERS="1.3"
+VERS="1.4"
 DISTRO="rfctf-client"
 CONTAINER_NAME="rfhs-${DISTRO}-ci"
 if docker container inspect "${CONTAINER_NAME}" > /dev/null 2>&1; then
@@ -103,8 +103,8 @@ CONTAINER_PHYS="$(for phy in /sys/class/ieee80211/*; do
   driver="$(readlink -f "${phy}/device/driver")"
   if [ "${driver##*/}" = mac80211_hwsim ]; then printf '%s\n' "${phy##*/}"; fi
 done)"
-# Start the container
-docker run -d --rm --network none --name "${CONTAINER_NAME}" \
+# Start the container; docker's own healthcheck runs would race the tests' runs of the checker
+docker run -d --rm --no-healthcheck --network none --name "${CONTAINER_NAME}" \
   --cap-add net_raw --cap-add net_admin \
   "rfhs/${DISTRO}:${VERS}"
   #--privileged --userns host \
@@ -123,7 +123,9 @@ for phy in ${CONTAINER_PHYS}; do
   sudo iw phy "${phy}" set netns name "${CONTAINER_NAME}"
 done
 sleep "${STARTUP_WAIT:-90}"
-if docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
+# there are no APs for the clients here, so the healthcheck runs as --test
+if ../tools/bench_healthcheck.sh -t 100 -x './ldm_checker --test' "${CONTAINER_NAME}" \
+  && docker exec "${CONTAINER_NAME}" ./ldm_checker --test; then
   docker tag "rfhs/${DISTRO}:${VERS}" "rfhs/${DISTRO}:latest"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push "rfhs/${DISTRO}:${VERS}"

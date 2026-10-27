@@ -92,26 +92,56 @@ if [ "${1:-}" = "excessive" ]; then
   fi
 fi
 
-# Truncate the file before writing so we only have one pass worth of errors
-truncate -s0 /root/HEALTHCHECK_DEGRADED
+# Only a failing pass writes /root/HEALTHCHECK_DEGRADED, and it overwrites the
+# last one's, so the file holds one pass worth of errors and its existence
+# means the last pass failed. Its first line names the failure. Every failing
+# pass notifies, so the contestant can't miss it.
+degraded() {
+  notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
+  exit 1
+}
 
 # Next we check runtime services think they are running
 # sshdir and sshkeys don't have to be checked, only sshd
-if [ "$(supervisorctl status sshd X11 xfce x11vnc novnc | grep -c 'RUNNING')" -lt "5" ]; then
-  printf 'Something is wrong with one of our services.\n'
-  supervisorctl status sshd X11 xfce x11vnc novnc | tee -a /root/HEALTHCHECK_DEGRADED
-  notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
-  exit 1
+# supervisorctl takes a lot of CPU to start, so this asks supervisord over
+# XML-RPC, on the server supervisorctl uses. awk pairs each process's name
+# with its statename and description, and on a failure writes the report,
+# with the lines supervisorctl status would print
+if ! curl -fsS --max-time 30 -H 'Content-Type: text/xml' http://127.0.0.1:9001/RPC2 \
+  --data-binary '<?xml version="1.0"?><methodCall><methodName>supervisor.getAllProcessInfo</methodName></methodCall>' 2>&1 \
+  | awk -v report=/root/HEALTHCHECK_DEGRADED '
+    function out(line) { print line; print line > report }
+    function unxml(s) { gsub(/&lt;/, "<", s); gsub(/&gt;/, ">", s); gsub(/&quot;/, "\"", s); gsub(/&amp;/, "\\&", s); return s }
+    /<params>/ { answered = 1 }
+    !answered { gsub(/<[^>]*>/, ""); if ($0 != "") said[++lines] = $0; next }
+    /<name>/ { key = $0; gsub(/<[^>]*>/, "", key); getline; gsub(/<[^>]*>/, "")
+      if (key == "name") name = $0; else if (key == "statename") state = $0; else if (key == "description") desc = $0 }
+    /<\/struct>/ { if (name != "") { states[name] = state; descs[name] = desc }; name = state = desc = "" }
+    END { if (!answered) {
+        out("supervisord did not answer on 127.0.0.1:9001")
+        for (i = 1; i <= lines; i++) out(said[i])
+        exit 1 }
+      n = split("sshd X11 xfce x11vnc novnc", want, " ")
+      for (i = 1; i <= n; i++) if (!(want[i] in states) || states[want[i]] != "RUNNING") down = down (down == "" ? "" : ", ") want[i]
+      if (down == "") exit 0
+      out("Not running: " down)
+      for (i = 1; i <= n; i++)
+        if (want[i] in states) out(sprintf("%-33s%-10s%s", want[i], states[want[i]], unxml(descs[want[i]])))
+        else out(sprintf("%-33s%-10s%s", want[i], "ERROR", "(no such process)"))
+      exit 1 }'; then
+  degraded
 fi
 
 # Then we check the expected listening ports are actually listening
+listening=" $(ss -Hnlt | awk '{ printf "%s ", $4 }')"
 for port in 22 8080; do
-  if ! ss -nlt | grep -q "0.0.0.0:${port}"; then
-    printf 'Nothing is listening on port %s\n' "${port}" | tee -a /root/HEALTHCHECK_DEGRADED
-    ss -nltp | tee -a /root/HEALTHCHECK_DEGRADED
-    notify-send 'Healthcheck' "Failed\n$(cat /root/HEALTHCHECK_DEGRADED)" --icon=dialog-error || true
-    exit 1
-  fi
+  case "${listening}" in
+    *" 0.0.0.0:${port} "*) ;;
+    *)
+      { printf 'Nothing is listening on port %s\n' "${port}"; ss -nltp; } | tee /root/HEALTHCHECK_DEGRADED
+      degraded
+      ;;
+  esac
 done
 
 if [ "${1:-}" = "excessive" ]; then
@@ -122,6 +152,19 @@ if [ "${1:-}" = "excessive" ]; then
   fi
   if ! python3 -c 'import socket, sys; s = socket.create_connection(("127.0.0.1", 5900), 10); sys.exit(not s.recv(12).startswith(b"RFB "))'; then
     printf 'x11vnc did not send an RFB greeting\n'
+    exit 1
+  fi
+  printf 'Test passed\n'
+  printf 'Testing the healthcheck fails with novnc stopped and recovers...\n'
+  supervisorctl stop novnc > /dev/null
+  if "${0}" > /dev/null 2>&1 || ! grep -q '^novnc ' /root/HEALTHCHECK_DEGRADED; then
+    supervisorctl start novnc > /dev/null || true
+    printf 'The healthcheck did not fail with novnc stopped\n'
+    exit 1
+  fi
+  supervisorctl start novnc > /dev/null
+  if ! "${0}" > /dev/null 2>&1 || [ -e /root/HEALTHCHECK_DEGRADED ]; then
+    printf 'The healthcheck did not recover once novnc was started again\n'
     exit 1
   fi
   printf 'Test passed\n'

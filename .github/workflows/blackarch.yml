@@ -9,6 +9,8 @@ on:
       - contestant_containers/files/*.words
       - contestant_containers/files/supervisord-blackarch.conf
       - contestant_containers/files/contestant-checker
+      - contestant_containers/tests/test_healthcheck.sh
+      - tools/bench_healthcheck.sh
       - contestant_containers/files/contestant_start
       - .github/workflows/blackarch.yml
       - .github/workflows/build-image.yml

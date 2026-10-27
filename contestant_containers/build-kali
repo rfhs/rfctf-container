@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-VERS="0.51"
+VERS="0.52"
 DISTRO="kali"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
@@ -9,11 +9,14 @@ fi
 docker pull docker.io/kalilinux/kali-rolling:latest
 docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
-docker run -d --rm --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
+# docker's own healthcheck runs would race the tests' runs of the checker
+docker run -d --rm --no-healthcheck --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
 STARTUP_WAIT="${STARTUP_WAIT:-30}"
 printf "Sleeping %s seconds so services have time to start up...\n" "${STARTUP_WAIT}"
 sleep "${STARTUP_WAIT}"
-if docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive; then
+if ../tools/bench_healthcheck.sh -t 100 "rfhs-${DISTRO}-ci" \
+  && docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive \
+  && ./tests/test_healthcheck.sh "rfhs-${DISTRO}-ci"; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push rfhs/${DISTRO}
