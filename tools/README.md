@@ -13,7 +13,7 @@ before they push anything, with `-t 100`: the build fails if the median
 healthcheck takes over 100 ms or any run of it fails.
 
 - `contestant_containers/build-*` bench `contestant-checker`.
-- `infrastructure_containers/build-rfctf-client.sh` benches `ldm_checker
+- `infrastructure_containers/build-rfctf-client` benches `ldm_checker
   --test`, since the clients have no APs to connect to in CI.
 - openwrt's `docker-build.sh`, in [rfhs/openwrt](https://github.com/rfhs/openwrt),
   benches `rfhs_checker` from an rfctf-container checkout, by default

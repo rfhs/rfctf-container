@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths: &paths
       - infrastructure_containers/Dockerfile.rfctf-client
-      - infrastructure_containers/build-rfctf-client.sh
+      - infrastructure_containers/build-rfctf-client
       - infrastructure_containers/files/supervisord-client.conf
       - infrastructure_containers/make_gentoo_cache.sh
       - infrastructure_containers/tools/build_mac80211_hwsim.sh
@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     with:
       directory: infrastructure_containers
-      script: build-rfctf-client.sh
+      script: build-rfctf-client
       snapshot: true
       hwsim: true
       startup-wait: '180'

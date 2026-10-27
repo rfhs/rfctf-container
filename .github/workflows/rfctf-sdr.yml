@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths: &paths
       - infrastructure_containers/Dockerfile.rfctf-sdr
-      - infrastructure_containers/build-rfctf-sdr.sh
+      - infrastructure_containers/build-rfctf-sdr
       - infrastructure_containers/make_gentoo_cache.sh
       - .github/workflows/rfctf-sdr.yml
       - .github/workflows/build-image.yml
@@ -28,5 +28,5 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     with:
       directory: infrastructure_containers
-      script: build-rfctf-sdr.sh
+      script: build-rfctf-sdr
       snapshot: true
