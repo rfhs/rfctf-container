@@ -18,6 +18,8 @@ The actual challenges are all run from docker containers.  The build files are a
 cd startup
 ```
 
+`misc/first_install` sets a machine up to run them at boot, and is safe to run again: it checks that the commands the startup scripts run are installed, installs docker and iw if they're missing, links the startup scripts into /etc/local.d and pulls the images.
+
 The scripts are named in a lexical order to be run in that order.  A description of the function for each script is as follows:
 
 ### 00_aws_set_dns.start

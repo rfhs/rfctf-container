@@ -1,12 +1,46 @@
 #!/bin/sh
 set -eux
 
-missing_tools=""
-for tool in awk cat chmod cp cut grep ln mkdir modinfo; do
-  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-done
-if [ -n "${missing_tools}" ]; then
-  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
+# needs script command...: names the commands script runs that aren't
+# installed
+unmet=""
+needs() {
+  script="${1}"
+  shift
+  missing_tools=""
+  for tool in "$@"; do
+    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+  done
+  if [ -n "${missing_tools}" ]; then
+    printf '%s: required commands not found:%s\n' "${script}" "${missing_tools}"
+    unmet=1
+  fi
+}
+needs first_install apt-get awk cat chmod cp cut grep ln mkdir modinfo
+# The startup scripts this links into /etc/local.d don't check for
+# themselves, so a command one of them starts to run has to be added here.
+# docker and iw aren't checked, as this installs them below, and
+# 07_rfctf-sdr.start and 08_fosphor_knob.start aren't linked.
+needs rfhs-container-init awk cat chown dirname find ip mkdir mount mountpoint rm sed sleep stat touch
+needs fixphy.sh cat find seq
+needs 00_aws_set_dns.start cat
+needs 00_docker_check.start awk shutdown sleep
+needs 00_radio_init.start cat dirname grep lsmod modinfo modprobe sleep
+needs 01_openwrt.start awk dirname seq sleep
+needs 02_rfctf-client.start dirname seq sleep
+needs 03_pentoo-contestant.start dirname seq sleep
+needs 04_kali-contestant.start dirname seq sleep
+needs 05_parrot-contestant.start dirname seq sleep
+needs 06_blackarch-contestant.start dirname seq sleep
+needs 97_nginx_proxy.start cat chown mkdir sleep
+needs 98_nginx_proxy_ssl.start cat sleep
+needs 99_notify-scoreboard.start cat
+# they only use these on EC2
+if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
+  needs 00_aws_set_dns.start aws cloud-init curl
+  needs 99_notify-scoreboard.start aws curl uuidgen
+fi
+if [ -n "${unmet}" ]; then
   exit 1
 fi
 
@@ -26,15 +60,6 @@ if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
   fi
 fi
 if [ -n "${missing:-}" ]; then
-  missing_tools=""
-  # shellcheck disable=SC2043
-  for tool in apt-get; do
-    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-  done
-  if [ -n "${missing_tools}" ]; then
-    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-    exit 1
-  fi
   apt-get update
   # shellcheck disable=SC2086
   apt-get -y install ${missing}

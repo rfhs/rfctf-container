@@ -1,15 +1,6 @@
 #!/bin/sh
 set -eux
 
-missing_tools=""
-for tool in cat dirname grep lsmod modinfo modprobe sleep; do
-  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-done
-if [ -n "${missing_tools}" ]; then
-  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-  exit 1
-fi
-
 #this script configures the virtual radios
 #if this script re-runs it will remove all radios and reinitialize them
 #this means all containers will lose their virtual radios

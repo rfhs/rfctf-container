@@ -4,8 +4,12 @@
 set -e
 set -u
 
+tools="awk df docker find grep lsb_release mkdir rm tail truncate wc"
+if grep -qE '^ID(_LIKE)?=.*(debian|ubuntu)' /etc/os-release 2> /dev/null; then
+  tools="${tools} apt-get"
+fi
 missing_tools=""
-for tool in awk df docker find grep lsb_release mkdir rm tail truncate wc; do
+for tool in ${tools}; do
   command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
 done
 if [ -n "${missing_tools}" ]; then
@@ -18,18 +22,6 @@ if [ "${distro}" = "Ubuntu" ]; then
   distro='debianlike'
 elif [ "${distro}" = "Debian" ]; then
   distro='debianlike'
-fi
-
-if [ "${distro}" = "debianlike" ]; then
-  missing_tools=""
-  # shellcheck disable=SC2043
-  for tool in apt-get; do
-    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-  done
-  if [ -n "${missing_tools}" ]; then
-    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-    exit 1
-  fi
 fi
 
 check_disk_usage() {

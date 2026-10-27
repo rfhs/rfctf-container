@@ -10,17 +10,6 @@ if [ -n "${DEBUG}" ]; then
   set -x
 fi
 
-if [ -n "${FIX_PHY}" ]; then
-  missing_tools=""
-  for tool in cat iw seq; do
-    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-  done
-  if [ -n "${missing_tools}" ]; then
-    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-    exit 1
-  fi
-fi
-
 findFreeInterface() {
   if [ -z "${1}" ]; then
     printf "findFreeInterface needs a target mode.\n"

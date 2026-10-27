@@ -1,26 +1,9 @@
 #!/bin/bash
 
-missing_tools=""
-for tool in cat cloud-init; do
-  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-done
-if [ -n "${missing_tools}" ]; then
-  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-  exit 1
-fi
-
 # Wait for cloud-init to complete before doing anything else
 cloud-init status --wait
 
 if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
-  missing_tools=""
-  for tool in aws curl; do
-    command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-  done
-  if [ -n "${missing_tools}" ]; then
-    printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}"
-    exit 1
-  fi
   # Retrieve a token for subsequent requests
   TOKEN=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" "http://169.254.169.254/latest/api/token")
   if [ -z "${TOKEN:-}" ]; then

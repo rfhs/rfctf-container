@@ -9,6 +9,15 @@
 #   docker run --rm -v "$PWD:/work" -w /work docker.io/pentoolinux/pentoo-core:latest ./make_gentoo_cache.sh
 set -eu
 
+missing_tools=""
+for tool in awk base64 cat chmod curl date git gpgv grep head mkdir mktemp mv rm sed tar touch tr wc xz; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
+
 OUTPUT="${1:-portage_and_overlay.tar.xz}"
 BINHOST="${BINHOST:-https://pentoo.glpgs.io/Packages/amd64_23.0s-hardened}"
 BINHOST="${BINHOST%/}"
@@ -47,11 +56,6 @@ too_old() {
   fi
 }
 
-missing_tools=""
-for tool in awk base64 cat chmod curl date git gpgv grep head mkdir mktemp mv rm sed tar touch tr wc xz; do
-  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
-done
-[ -z "${missing_tools}" ] || die "required commands not found:${missing_tools}"
 for key in "${GENTOO_KEY}" "${PENTOO_KEY}"; do
   if [ ! -r "${key}" ]; then
     die "can't read the signing keys ${key}; set GENTOO_KEY/PENTOO_KEY, or run this in docker.io/pentoolinux/pentoo-core"
