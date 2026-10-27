@@ -114,8 +114,12 @@ CONTAINER_PHYS="$(for phy in /sys/class/ieee80211/*; do
   if [ "${driver##*/}" = mac80211_hwsim ]; then printf '%s\n' "${phy##*/}"; fi
 done)"
 # Start the container; docker's own healthcheck runs would race the tests' runs of the checker
+# dhcpcd sets promote_secondaries=1 on each interface it starts on, and exits
+# when it can't, as without --privileged /proc/sys is read-only; a radio moved
+# in takes the namespace's default, which otherwise comes from the host
 docker run -d --rm --no-healthcheck --network none --name "${CONTAINER_NAME}" \
   --cap-add net_raw --cap-add net_admin \
+  --sysctl net.ipv4.conf.default.promote_secondaries=1 \
   "rfhs/${DISTRO}:${VERS}"
   #--privileged --userns host \
 # Give it radios

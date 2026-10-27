@@ -97,8 +97,12 @@ docker run -d --rm --no-healthcheck --name bench-openwrt --network none \
   --tmpfs /tmp:mode=0755,nosuid,nodev,nr_inodes=800k,size=20% \
   --cap-add net_raw --cap-add net_admin \
   "${openwrt_image}"
+# dhcpcd sets promote_secondaries=1 on each interface it starts on, and exits
+# when it can't, as without --privileged /proc/sys is read-only; a radio moved
+# in takes the namespace's default, which otherwise comes from the host
 docker run -d --rm --no-healthcheck --name bench-rfctf-client --network none \
   --cap-add net_raw --cap-add net_admin \
+  --sysctl net.ipv4.conf.default.promote_secondaries=1 \
   "${client_image}"
 
 move() {
