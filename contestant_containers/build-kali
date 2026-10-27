@@ -8,7 +8,7 @@ if [ -n "${missing_tools}" ]; then
   printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
   exit 1
 fi
-VERS="0.52"
+VERS="0.53"
 DISTRO="kali"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
@@ -24,7 +24,8 @@ printf "Sleeping %s seconds so services have time to start up...\n" "${STARTUP_W
 sleep "${STARTUP_WAIT}"
 if ../tools/bench_healthcheck.sh -t 100 "rfhs-${DISTRO}-ci" \
   && docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive \
-  && ./tests/test_healthcheck.sh "rfhs-${DISTRO}-ci"; then
+  && ./tests/test_healthcheck.sh "rfhs-${DISTRO}-ci" \
+  && ./tests/test_kali_panel_trim.sh "rfhs-${DISTRO}-ci"; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then
     docker push rfhs/${DISTRO}

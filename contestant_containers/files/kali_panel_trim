@@ -1,0 +1,84 @@
+#!/bin/sh
+# Removes the cpugraph and genmon plugins from Kali's default xfce panel:
+# genmon runs Kali's VPN IP script every second, and the two cost more idle
+# CPU than the rest of the container. It fails, leaving the panel as it was,
+# unless the lines it removes are exactly the ones below, so a change to
+# Kali's panel has to be looked at here.
+#   kali_panel_trim [panel]
+# panel defaults to /etc/xdg/xfce4/panel/default.xml.
+set -eu
+
+missing_tools=""
+for tool in cat cmp mktemp rm sed; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
+
+panel="${1:-/etc/xdg/xfce4/panel/default.xml}"
+edited="$(mktemp)"
+removed="$(mktemp)"
+expected="$(mktemp)"
+trap 'rm -f "${edited}" "${removed}" "${expected}"' EXIT
+
+cat > "${expected}" << 'EOF'
+        <value type="int" value="13"/>
+        <value type="int" value="15"/>
+    <property name="plugin-13" type="string" value="cpugraph">
+      <property name="update-interval" type="int" value="0"/>
+      <property name="time-scale" type="int" value="0"/>
+      <property name="size" type="int" value="128"/>
+      <property name="mode" type="int" value="1"/>
+      <property name="color-mode" type="int" value="1"/>
+      <property name="frame" type="int" value="0"/>
+      <property name="border" type="int" value="0"/>
+      <property name="bars" type="int" value="1"/>
+      <property name="foreground-1" type="array">
+        <value type="double" value="0.15294117647058825"/>
+        <value type="double" value="0.46666666666666656"/>
+        <value type="double" value="1"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="foreground-2" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+        <value type="double" value="0.8784313725490196"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="bars-color" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="1"/>
+        <value type="double" value="0.8784313725490196"/>
+        <value type="double" value="1"/>
+      </property>
+    </property>
+    <property name="plugin-15" type="string" value="genmon">
+      <property name="command" type="string" value="/usr/share/kali-themes/xfce4-panel-genmon-vpnip.sh"/>
+      <property name="use-label" type="bool" value="false"/>
+      <property name="update-period" type="int" value="1000"/>
+      <property name="enable-single-row" type="bool" value="true"/>
+      <property name="font" type="string" value="Fira Code Medium 8"/>
+    </property>
+EOF
+
+# sed deletes, writing each deleted line to ${removed}: the two plugins' ids
+# in the panel's plugin-ids, and each plugin's property, up to the next
+# plugin's. The commented out "Light panel" is left alone.
+sed -e '/<!-- Light panel/,/-->/b' \
+  -e '/^        <value type="int" value="1[35]"\/>$/{' -e "w ${removed}" -e 'd' -e '}' \
+  -e '/<property name="plugin-13" type="string" value="cpugraph">/,/<property name="plugin-14"/{' \
+  -e '/<property name="plugin-14"/b' -e "w ${removed}" -e 'd' -e '}' \
+  -e '/<property name="plugin-15" type="string" value="genmon">/,/<property name="plugin-16"/{' \
+  -e '/<property name="plugin-16"/b' -e "w ${removed}" -e 'd' -e '}' \
+  "${panel}" > "${edited}"
+
+if ! cmp -s "${expected}" "${removed}"; then
+  printf '%s: %s is not what this expects, so it is left as it is. It would remove:\n' "${0##*/}" "${panel}" >&2
+  cat "${removed}" >&2
+  printf 'instead of:\n' >&2
+  cat "${expected}" >&2
+  exit 1
+fi
+cat "${edited}" > "${panel}"
