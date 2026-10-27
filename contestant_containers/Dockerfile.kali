@@ -1,9 +1,6 @@
 FROM docker.io/kalilinux/kali-rolling:latest
-# http.kali.org redirects to third party mirrors, which can be down for days;
-# kali.download is Kali's own CDN
-RUN sed -i 's|http://http.kali.org/kali/|http://kali.download/kali/|' /etc/apt/sources.list.d/kali.sources && \
-  grep -q 'kali.download' /etc/apt/sources.list.d/kali.sources && \
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get update && \
+RUN --mount=type=bind,source=files/kali_apt_update,target=/tmp/kali_apt_update \
+  sh /tmp/kali_apt_update && \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get dist-upgrade -y && \
   # missing urh, gr-lora_sdr, nrsc5

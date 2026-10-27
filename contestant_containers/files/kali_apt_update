@@ -1,0 +1,35 @@
+#!/bin/sh
+# Points apt at a Kali mirror and updates its package lists, trying each
+# mirror in turn until one works.
+#   kali_apt_update [mirror...]
+# The default is Kali's own CDN, then Kali's redirector. Neither alone is
+# reliable: the CDN's Cloudflare edges cache the package lists for up to 10
+# days and can serve one older than the InRelease that lists it ("File has
+# unexpected size ... Mirror sync in progress?"), and the redirector sends
+# apt to third party mirrors, which can be down for days.
+set -eu
+
+missing_tools=""
+for tool in apt-get grep sed; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
+
+if [ "$#" -eq 0 ]; then
+  set -- http://kali.download/kali/ http://http.kali.org/kali/
+fi
+sources=/etc/apt/sources.list.d/kali.sources
+for mirror in "$@"; do
+  sed -i "s#^URIs: .*#URIs: ${mirror}#" "${sources}"
+  grep -qx "URIs: ${mirror}" "${sources}"
+  # without --error-on=any a mirror apt can't reach is only a warning
+  if DEBIAN_FRONTEND=noninteractive apt-get update --error-on=any; then
+    exit 0
+  fi
+  printf '%s: apt-get update failed with %s\n' "${0##*/}" "${mirror}" >&2
+done
+printf '%s: apt-get update failed with every mirror:%s\n' "${0##*/}" "$(printf ' %s' "$@")" >&2
+exit 1

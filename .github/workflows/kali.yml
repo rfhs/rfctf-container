@@ -12,6 +12,7 @@ on:
       - contestant_containers/tests/test_healthcheck.sh
       - tools/bench_healthcheck.sh
       - contestant_containers/files/contestant_start
+      - contestant_containers/files/kali_apt_update
       - contestant_containers/files/kali_panel_trim
       - contestant_containers/tests/test_kali_panel_trim.sh
       - .github/workflows/kali.yml
