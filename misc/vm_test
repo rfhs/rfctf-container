@@ -33,7 +33,7 @@ if [ "$(docker ps | wc -l)" -lt "8" ]; then
   docker ps
   exit 1
 fi
-if [ "$(docker ps | grep -c '(healthy)')" -lt "5" ]; then
+if [ "$(docker ps | grep -c '(healthy)')" -lt "8" ]; then
   printf 'FATAL: Not all docker containers are healthy\n'
   docker ps
   exit 1
