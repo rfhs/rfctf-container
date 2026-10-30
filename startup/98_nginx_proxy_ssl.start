@@ -16,11 +16,20 @@ CERTBOT_CONFDIR='/var/cache/rfhs-rfctf/ssl'
 
 if [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/fullchain.pem" ] && \
   [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/privkey.pem" ] && \
-  [ -f "${CERTBOT_CONFDIR}/etc/letsencrypt/live/rfhscontestant/chain.pem" ]; then
+  [ -f "${CERTBOT_CONFDIR}/live/rfhscontestant/chain.pem" ]; then
   HAVE_CERTS="true"
 else
   HAVE_CERTS="false"
 fi
+
+# misc/first_install writes a stub with this name until the host is
+# provisioned; Let's Encrypt can't issue a certificate for it
+case "${FQDN}" in
+  UNPROVISIONED.*)
+    printf '%s is the stub from misc/first_install, not asking Let'"'"'s Encrypt for a certificate\n' "${FQDN}"
+    exit 0
+    ;;
+esac
 
 if [ "${HAVE_CERTS}" = "false" ]; then
   docker run --rm --name rhfs-certbot \
