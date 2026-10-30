@@ -46,15 +46,17 @@ summary.
 The containers have to run without docker's own healthcheck
 (`--no-healthcheck`), whose runs would land in the windows; it refuses them
 otherwise. To start the contestant images the way `startup/rfhs-container-init`
-does:
+does, with the privileges `contestant_docker_args` in `startup/rfhs-helpers.sh`
+gives them:
 
 ```sh
+. ./startup/rfhs-helpers.sh
 for d in pentoo kali parrot blackarch; do
   case "${d}" in pentoo) img=rfhs/pentoo;; *) img="ghcr.io/rfhs/${d}";; esac
+  # shellcheck disable=SC2046
   docker run --rm -d --no-healthcheck --name "bench-${d}" \
     --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
-    --cap-add net_raw --cap-add net_admin --cap-add=dac_read_search \
-    --security-opt seccomp=unconfined "${img}"
+    $(contestant_docker_args) "${img}"
 done
 ```
 

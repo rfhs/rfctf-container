@@ -16,12 +16,14 @@ needs() {
     unmet=1
   fi
 }
-needs first_install apt-get awk cat chmod cp cut grep ln mkdir modinfo
+needs first_install apt-get awk cat chmod cp cut dirname grep ln mkdir modinfo
+# docker_userns_remap, which this runs once docker is installed
+needs docker_userns_remap awk getent grep mkdir python3 sed sleep touch useradd
 # The startup scripts this links into /etc/local.d don't check for
 # themselves, so a command one of them starts to run has to be added here.
 # docker and iw aren't checked, as this installs them below, and
 # 07_rfctf-sdr.start and 08_fosphor_knob.start aren't linked.
-needs rfhs-container-init awk cat chown dirname find ip mkdir mount mountpoint rm sed sleep stat touch
+needs rfhs-container-init awk cat chown dirname find grep ip mkdir mount mountpoint rm sed sleep stat touch
 needs fixphy.sh cat find seq
 needs 00_aws_set_dns.start cat
 needs 00_docker_check.start awk shutdown sleep
@@ -64,6 +66,10 @@ if [ -n "${missing:-}" ]; then
   # shellcheck disable=SC2086
   apt-get -y install ${missing}
 fi
+
+# Before pulling anything: with the remapping on, docker keeps its images
+# apart from the ones it had without it
+"$(dirname "${0}")"/docker_userns_remap
 
 # Then we setup our startup sequence
 [ ! -d '/etc/local.d' ] && mkdir -p /etc/local.d

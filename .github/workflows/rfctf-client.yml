@@ -10,6 +10,7 @@ on:
       - infrastructure_containers/make_gentoo_cache.sh
       - infrastructure_containers/tools/build_mac80211_hwsim.sh
       - tools/bench_healthcheck.sh
+      - startup/rfhs-helpers.sh
       - .github/workflows/rfctf-client.yml
       - .github/workflows/build-image.yml
   pull_request:

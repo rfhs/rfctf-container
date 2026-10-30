@@ -23,6 +23,10 @@ on:
         description: The test needs mac80211_hwsim radios and the host's iw and rfkill
         type: boolean
         default: false
+      userns-remap:
+        description: Build and test with docker's user namespace remapping, as the game hosts run it
+        type: boolean
+        default: false
       startup-wait:
         description: Seconds the test waits for the container to start (STARTUP_WAIT); empty keeps the script's own
         type: string
@@ -110,6 +114,10 @@ jobs:
           fi
           iw dev
           sudo modprobe -r mac80211_hwsim
+
+      - name: Turn on docker's user namespace remapping
+        if: inputs.userns-remap
+        run: sudo "${GITHUB_WORKSPACE}/misc/docker_userns_remap"
 
       - name: Build and test
         env:

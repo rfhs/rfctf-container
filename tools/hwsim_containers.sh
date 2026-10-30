@@ -23,6 +23,8 @@ if [ -n "${missing_tools}" ]; then
   exit 1
 fi
 
+. "$(dirname "${0}")/../startup/rfhs-helpers.sh"
+
 case "${1:-}" in
   start) ;;
   stop)
@@ -92,18 +94,23 @@ for phy in ${client_phys} ${openwrt_phys}; do
   done
 done
 
-docker run -d --rm --no-healthcheck --name bench-openwrt --network none \
-  --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
-  --tmpfs /tmp:mode=0755,nosuid,nodev,nr_inodes=800k,size=20% \
-  --cap-add net_raw --cap-add net_admin \
-  "${openwrt_image}"
-# dhcpcd sets promote_secondaries=1 on each interface it starts on, and exits
-# when it can't, as without --privileged /proc/sys is read-only; a radio moved
-# in takes the namespace's default, which otherwise comes from the host
-docker run -d --rm --no-healthcheck --name bench-rfctf-client --network none \
-  --cap-add net_raw --cap-add net_admin \
-  --sysctl net.ipv4.conf.default.promote_secondaries=1 \
-  "${client_image}"
+(
+  IFS='
+'
+  set -f
+  # shellcheck disable=SC2046
+  docker run -d --rm --no-healthcheck --name bench-openwrt --network none \
+    --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime $(openwrt_docker_args) \
+    "${openwrt_image}"
+)
+(
+  IFS='
+'
+  set -f
+  # shellcheck disable=SC2046
+  docker run -d --rm --no-healthcheck --name bench-rfctf-client --network none $(rfctf_client_docker_args) \
+    "${client_image}"
+)
 
 move() {
   pid="$(docker inspect -f '{{.State.Pid}}' "${1}")"

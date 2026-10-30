@@ -1,0 +1,96 @@
+#!/bin/sh
+# Turns on docker's user namespace remapping with the range the game expects:
+# a container's root is host uid and gid 231072, which rfhs-container-init
+# gives the log, storage and key files the containers use. Safe to run again:
+# it changes only what isn't set yet, and restarts docker only then. Needs
+# root.
+#   sudo ./misc/docker_userns_remap
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  printf 'Run it as root\n' >&2
+  exit 1
+fi
+missing_tools=""
+for tool in awk docker getent grep mkdir python3 sed sleep touch useradd; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
+
+remap_user=dockremap
+remap_start=231072
+remap_count=65536
+changed=""
+
+if ! getent passwd "${remap_user}" > /dev/null; then
+  useradd --system --no-create-home --shell /usr/sbin/nologin "${remap_user}"
+  changed=1
+fi
+
+for map in /etc/subuid /etc/subgid; do
+  touch "${map}"
+  # another user's range overlapping this one would share its ids with the
+  # containers' root
+  overlap="$(awk -F: -v user="${remap_user}" -v start="${remap_start}" -v count="${remap_count}" \
+    '$1 != user && $2 < start + count && $2 + $3 > start { print $1 ":" $2 ":" $3 }' "${map}")"
+  if [ -n "${overlap}" ]; then
+    printf '%s: %s already gives %s, which overlaps %s:%s:%s\n' "${0##*/}" "${map}" "${overlap}" \
+      "${remap_user}" "${remap_start}" "${remap_count}" >&2
+    exit 1
+  fi
+  if ! grep -qx "${remap_user}:${remap_start}:${remap_count}" "${map}"; then
+    sed -i "/^${remap_user}:/d" "${map}"
+    printf '%s:%s:%s\n' "${remap_user}" "${remap_start}" "${remap_count}" >> "${map}"
+    changed=1
+  fi
+done
+
+mkdir -p /etc/docker
+# exits 10 when it changed daemon.json
+python3 -I - "${remap_user}" << 'EOF' && config_rc=0 || config_rc=$?
+import json, os, sys
+path = '/etc/docker/daemon.json'
+config = {}
+if os.path.exists(path) and os.path.getsize(path) > 0:
+    with open(path) as f:
+        config = json.load(f)
+if config.get('userns-remap') == sys.argv[1]:
+    sys.exit(0)
+config['userns-remap'] = sys.argv[1]
+with open(path, 'w') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+sys.exit(10)
+EOF
+case "${config_rc}" in
+  0) ;;
+  10) changed=1 ;;
+  *)
+    printf "%s: couldn't set userns-remap in /etc/docker/daemon.json\n" "${0##*/}" >&2
+    exit 1
+    ;;
+esac
+
+if [ -n "${changed}" ]; then
+  if [ -d /run/systemd/system ]; then
+    systemctl restart docker
+  elif [ -x /etc/init.d/docker ]; then
+    /etc/init.d/docker restart
+  else
+    printf '%s: restart docker to turn the remapping on\n' "${0##*/}" >&2
+    exit 1
+  fi
+fi
+waited=0
+until docker info > /dev/null 2>&1 || [ "${waited}" -ge 60 ]; do
+  sleep 1
+  waited=$((waited + 1))
+done
+if ! docker info --format '{{.SecurityOptions}}' | grep -q 'name=userns'; then
+  printf "%s: docker isn't remapping user namespaces after the restart\n" "${0##*/}" >&2
+  exit 1
+fi
+printf "docker remaps the containers' root to %s:%s\n" "${remap_start}" "${remap_start}"

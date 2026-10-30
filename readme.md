@@ -18,7 +18,9 @@ The actual challenges are all run from docker containers.  The build files are a
 cd startup
 ```
 
-`misc/first_install` sets a machine up to run them at boot, and is safe to run again: it checks that the commands the startup scripts run are installed, installs docker and iw if they're missing, links the startup scripts into /etc/local.d and pulls the images.
+`misc/first_install` sets a machine up to run them at boot, and is safe to run again: it checks that the commands the startup scripts run are installed, installs docker and iw if they're missing, turns on docker's user namespace remapping with `misc/docker_userns_remap`, links the startup scripts into /etc/local.d and pulls the images.
+
+No container runs `--privileged`.  The `*_docker_args` functions in `startup/rfhs-helpers.sh` give each one only what it needs (capabilities, namespaced sysctls, the SDRs' USB devices), and the build scripts test the images with the same.  The contestants run remapped, so their root is host uid and gid 231072, which owns the log, storage and key files `rfhs-container-init` gives them; it refuses to start them when docker isn't remapping.  `misc/docker_userns_remap` adds a `dockremap` user with exactly that range in /etc/subuid and /etc/subgid, as docker would otherwise pick the next free one, and sets `"userns-remap": "dockremap"` in /etc/docker/daemon.json.  openwrt, rfctf-client and rfctf-sdr use `--userns host`, as they need the host's devices and restricted files.
 
 The scripts are named in a lexical order to be run in that order.  A description of the function for each script is as follows:
 

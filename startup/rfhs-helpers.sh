@@ -119,3 +119,49 @@ usb_input_docker_args() {
     printf '%s\n' -v /run/udev:/run/udev:ro
   fi
 }
+
+# The privileges each game container runs with, in place of --privileged.
+# Only the contestants run with docker's remapping, as uid 231072; the others
+# need host root's devices and restricted files, so --userns host.
+# rfhs-container-init starts the containers with these, and the build scripts
+# and tools/hwsim_containers.sh test the images with them, so an image that
+# needs more fails its build. dhcpcd sets the promote_secondaries sysctl on
+# each interface it starts on, and exits when it can't: /proc/sys is
+# read-only, and a radio moved into a container takes the namespace's
+# default, which otherwise comes from the host.
+# dac_read_search: Pentoo's dumpcap has it as a file capability, so without
+# it in the container's bounding set dumpcap can't run and nothing captures.
+# seccomp=unconfined: docker's profile blocks user namespaces, which Firefox's
+# content sandbox and bwrap use.
+contestant_docker_args() {
+  printf '%s\n' --cap-add net_raw --cap-add net_admin --cap-add dac_read_search \
+    --security-opt seccomp=unconfined --sysctl net.ipv4.conf.default.promote_secondaries=1
+}
+
+rfctf_client_docker_args() {
+  printf '%s\n' --userns host --cap-add net_raw --cap-add net_admin --sysctl net.ipv4.conf.default.promote_secondaries=1
+}
+
+# The SDRs, as usb_input_docker_args does
+rfctf_sdr_docker_args() {
+  printf '%s\n' --userns host -v /dev/bus/usb:/dev/bus/usb --device-cgroup-rule 'c 189:* rmw'
+  if [ -d /run/udev ]; then
+    printf '%s\n' -v /run/udev:/run/udev:ro
+  fi
+}
+
+# The per-namespace sysctls from openwrt's /etc/sysctl.d, which it can't set
+# itself. With --privileged it also set its kernel.*, fs.* and vm.* ones on
+# the host, and procd took the host's hardware watchdog, which reset the host
+# a minute after the container stopped. procd mounts no tmpfs on /tmp, which
+# /var links to, without privileges.
+openwrt_docker_args() {
+  printf '%s\n' --userns host --cap-add net_admin --cap-add net_raw \
+    --tmpfs /tmp:mode=1777,nosuid,nodev,exec,nr_inodes=800k,size=20% \
+    --sysctl net.ipv4.ip_forward=1 \
+    --sysctl net.ipv4.conf.all.arp_ignore=1 --sysctl net.ipv4.conf.default.arp_ignore=1 \
+    --sysctl net.ipv4.igmp_max_memberships=100 \
+    --sysctl net.ipv4.tcp_fin_timeout=30 --sysctl net.ipv4.tcp_keepalive_time=120 \
+    --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.default.forwarding=1 \
+    --sysctl net.ipv6.conf.all.accept_ra=0 --sysctl net.ipv6.conf.default.accept_ra=0
+}
