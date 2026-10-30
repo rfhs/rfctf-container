@@ -4,7 +4,7 @@ RUN --mount=type=bind,source=files/kali_apt_update,target=/tmp/kali_apt_update \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get dist-upgrade -y && \
   # missing urh, gr-lora_sdr, nrsc5
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y aircrack-ng asleap freeradius-wpe hostapd-wpe iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-mana macchanger termshark tshark wireshark vim man pciutils hashcat hashcat-utils wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc kali-desktop-xfce dbus-x11 dialog librsvg2-common tmux tcpdump nmap iproute2 iputils-ping curl fldigi qsstv wsjtx isc-dhcp-client libnotify-bin plocate && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install --no-install-recommends -y aircrack-ng asleap freeradius-wpe hostapd-wpe iw kismet mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-mana macchanger termshark tshark wireshark vim man pciutils hashcat hashcat-utils wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc kali-desktop-xfce dbus-x11 dialog librsvg2-common tmux tcpdump nmap iproute2 iputils-ping curl fldigi qsstv wsjtx isc-dhcp-client libnotify-bin plocate kea-dhcp4-server hostapd && \
   # missing from kali-rolling when this was written (2026-10-25): gnuradio, gqrx-sdr and gr-osmosdr.
   # kali-rolling follows Debian testing, which dropped them while the thrift library transition
   # holds gnuradio back; they may return when the transition finishes. To watch it:

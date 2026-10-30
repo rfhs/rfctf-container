@@ -1,14 +1,14 @@
 #!/bin/sh
 set -e
 missing_tools=""
-for tool in docker hostname sleep; do
+for tool in docker hostname sleep sudo; do
   command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
 done
 if [ -n "${missing_tools}" ]; then
   printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
   exit 1
 fi
-VERS="0.53"
+VERS="0.54"
 DISTRO="kali"
 if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]; then
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
@@ -17,8 +17,18 @@ fi
 docker pull docker.io/kalilinux/kali-rolling:latest
 docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
+. ../startup/rfhs-helpers.sh
 # docker's own healthcheck runs would race the tests' runs of the checker
-docker run -d --rm --no-healthcheck --name "rfhs-${DISTRO}-ci" rfhs/${DISTRO}
+# The game's privileges and, as the game gives each contestant, four radios,
+# for contestant-checker excessive's wifi tests
+(
+  IFS='
+'
+  set -f
+  # shellcheck disable=SC2046
+  docker run -d --rm --no-healthcheck --name "rfhs-${DISTRO}-ci" $(contestant_docker_args) "rfhs/${DISTRO}"
+)
+sudo ../tools/give_hwsim_radios.sh "rfhs-${DISTRO}-ci" 4
 STARTUP_WAIT="${STARTUP_WAIT:-30}"
 printf "Sleeping %s seconds so services have time to start up...\n" "${STARTUP_WAIT}"
 sleep "${STARTUP_WAIT}"

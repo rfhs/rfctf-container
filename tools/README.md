@@ -120,3 +120,37 @@ gets the radios whose interfaces are wlan10 to wlan25, which its ldm.conf
 uses, and openwrt 10 others. All hwsim radios share one medium, so the
 clients find the APs. It only moves mac80211_hwsim radios, so a wifi card on
 the host stays where it is.
+
+## give_hwsim_radios.sh
+
+Moves `mac80211_hwsim` radios into a running container. The contestant
+build scripts give their test container four, as the game gives each
+contestant, for `contestant-checker excessive`'s wifi tests: hostapd and
+wpa_supplicant, the distribution's DHCP client getting a lease from
+kea-dhcp4 over that link, and `aireplay-ng --test`. It needs root.
+
+```sh
+sudo ./tools/give_hwsim_radios.sh rfhs-kali-ci 4
+```
+
+It loads mac80211_hwsim with that many radios when it isn't loaded, and
+reloads it with that many when too few are free but none is in another
+namespace. When other containers hold the rest, it fails rather than take
+theirs. The radios go back to the host when the container stops.
+
+## test_contestant_images.sh
+
+Tests contestant images the way their build scripts do, without building or
+pushing them, e.g. images built by hand under another tag. One at a time,
+each runs with the game's privileges (`contestant_docker_args`) and four
+radios from `give_hwsim_radios.sh`, then gets `bench_healthcheck.sh -t 100`,
+`contestant-checker excessive` and
+`contestant_containers/tests/test_healthcheck.sh`. It needs root, for the
+radios.
+
+```sh
+sudo ./tools/test_contestant_images.sh my/kali:test my/parrot:test
+```
+
+`STARTUP_WAIT` (default 120) is how long each image gets to start its
+services. It exits 1 if any image failed.

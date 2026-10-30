@@ -12,7 +12,10 @@ on:
       - contestant_containers/tests/test_healthcheck.sh
       - tools/bench_healthcheck.sh
       - contestant_containers/files/contestant_start
+      - startup/rfhs-helpers.sh
       - misc/docker_userns_remap
+      - tools/give_hwsim_radios.sh
+      - infrastructure_containers/tools/build_mac80211_hwsim.sh
       - .github/workflows/blackarch.yml
       - .github/workflows/build-image.yml
   pull_request:
@@ -37,6 +40,7 @@ jobs:
       directory: contestant_containers
       script: build-blackarch
       userns-remap: true
+      hwsim: true
       startup-wait: '120'
       timeout-minutes: 180
       publish: true

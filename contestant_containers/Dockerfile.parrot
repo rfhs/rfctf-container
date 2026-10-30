@@ -7,7 +7,7 @@ RUN \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update --error-on=any && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
   # missing urh, gr-lora_sdr, nrsc5, hashcat-utils; broken freeradius-wpe (needs bookworm's libperl5.36 and libpython3.11)
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd-mana iw mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-wpe macchanger tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd hostapd-mana iw kea-dhcp4-server mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-wpe macchanger tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \

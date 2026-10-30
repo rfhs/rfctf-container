@@ -18,7 +18,8 @@ if [ "${1:-}" = "excessive" ]; then
   }
   unmet=""
   # this healthcheck and these tests, besides the tools checked below
-  needs contestant-checker awk cat curl grep ldd nice notify-send python3 rm ss supervisorctl tail tee timeout wc
+  needs contestant-checker awk cat curl grep ip ldd mktemp nice notify-send python3 rm sed sleep sort ss supervisorctl tail \
+    tee timeout tr wc
   # contestant_start, which supervisord runs to start the services in order;
   # it doesn't check for itself, so a command it starts to run goes here
   needs contestant_start awk mkdir sleep supervisorctl
@@ -30,8 +31,8 @@ if [ "${1:-}" = "excessive" ]; then
   broken=""
   # every distribution packages these
   for tool in aircrack-ng airodump-ng aireplay-ng airmon-ng asleap bully hashcat hcxdumptool \
-    hcxpcapngtool hostapd-mana hostapd-wpe iw kismet macchanger mdk4 nmap pixiewps reaver tcpdump \
-    termshark tshark wash wifite wireshark wpa_passphrase wpa_supplicant; do
+    hcxpcapngtool hostapd hostapd-mana hostapd-wpe iw kea-dhcp4 kismet macchanger mdk4 nmap pixiewps \
+    reaver tcpdump termshark tshark wash wifite wireshark wpa_passphrase wpa_supplicant; do
     if ! tool_path="$(command -v "${tool}")"; then
       missing="${missing} ${tool}"
     elif ldd "${tool_path}" 2> /dev/null | grep -q 'not found'; then
@@ -44,6 +45,14 @@ if [ "${1:-}" = "excessive" ]; then
       broken="${broken} ${tool}"
     fi
   done
+  # each distribution's own DHCP client
+  if command -v dhcpcd > /dev/null 2>&1; then
+    dhcp_client=dhcpcd
+  elif command -v dhclient > /dev/null 2>&1; then
+    dhcp_client=dhclient
+  else
+    missing="${missing} dhcpcd-or-dhclient"
+  fi
   if [ -n "${missing}" ]; then
     printf 'Missing:%s\n' "${missing}"
   fi
@@ -92,6 +101,119 @@ if [ "${1:-}" = "excessive" ]; then
     exit 1
   fi
   printf 'Test passed\n'
+
+  # The build gives the container mac80211_hwsim radios, as the game gives it
+  # four, and the same privileges as the game, so these find out whether the
+  # tools work with them: an AP, a client and a monitor interface
+  wlans="$(iw dev | awk '$1 == "Interface" { print $2 }' | sort)"
+  if [ "$(printf '%s\n' "${wlans}" | grep -c .)" -lt 3 ]; then
+    printf 'The wifi tests need 3 radios, for an AP, a client and a monitor interface; found: %s\n' "$(printf '%s\n' "${wlans:-none}" | tr '\n' ' ')"
+    exit 1
+  fi
+  ap="$(printf '%s\n' "${wlans}" | sed -n 1p)"
+  client="$(printf '%s\n' "${wlans}" | sed -n 2p)"
+  monitor="$(printf '%s\n' "${wlans}" | sed -n 3p)"
+  wifi_dir="$(mktemp -d)"
+  wifi_pids=""
+  # wifi_cleanup: stops what the wifi tests started and puts the radios back
+  wifi_cleanup() {
+    for pid in ${wifi_pids}; do
+      kill "${pid}" 2> /dev/null || true
+    done
+    if [ -f "${wifi_dir}/dhclient.pid" ]; then
+      kill "$(cat "${wifi_dir}/dhclient.pid")" 2> /dev/null || true
+    fi
+    ip addr flush dev "${ap}" 2> /dev/null || true
+    ip addr flush dev "${client}" 2> /dev/null || true
+    ip link set "${monitor}" down 2> /dev/null || true
+    iw dev "${monitor}" set type managed 2> /dev/null || true
+    rm -rf "${wifi_dir}"
+  }
+  # wifi_fail message log...: says why the wifi tests failed, shows the logs
+  # and exits
+  wifi_fail() {
+    printf '%s\n' "${1}"
+    shift
+    for log in "$@"; do
+      printf '%s:\n' "${log##*/}"
+      sed 's/^/    /' "${wifi_dir}/${log}"
+    done
+    wifi_cleanup
+    exit 1
+  }
+  # logged seconds log pattern: waits up to that long for the log to have a
+  # line matching the pattern
+  logged() {
+    tenths=$((${1} * 10))
+    until grep -q -- "${3}" "${wifi_dir}/${2}"; do
+      tenths=$((tenths - 1))
+      if [ "${tenths}" -le 0 ]; then
+        return 1
+      fi
+      sleep 0.1
+    done
+  }
+
+  printf 'Testing hostapd and wpa_supplicant...\n'
+  printf 'interface=%s\ndriver=nl80211\nssid=rfhs-excessive\nhw_mode=g\nchannel=1\nwpa=2\nwpa_key_mgmt=WPA-PSK\nrsn_pairwise=CCMP\nwpa_passphrase=only a test\n' \
+    "${ap}" > "${wifi_dir}/hostapd.conf"
+  hostapd "${wifi_dir}/hostapd.conf" > "${wifi_dir}/hostapd.log" 2>&1 &
+  wifi_pids="${wifi_pids} $!"
+  if ! logged 15 hostapd.log 'AP-ENABLED'; then
+    wifi_fail "hostapd did not start an AP on ${ap}" hostapd.log
+  fi
+  printf 'network={\n\tssid="rfhs-excessive"\n\tpsk="only a test"\n\tkey_mgmt=WPA-PSK\n}\n' > "${wifi_dir}/wpa_supplicant.conf"
+  wpa_supplicant -D nl80211 -i "${client}" -c "${wifi_dir}/wpa_supplicant.conf" > "${wifi_dir}/wpa_supplicant.log" 2>&1 &
+  wifi_pids="${wifi_pids} $!"
+  if ! logged 60 wpa_supplicant.log 'CTRL-EVENT-CONNECTED'; then
+    wifi_fail "wpa_supplicant on ${client} did not connect to hostapd's WPA2 AP on ${ap}" wpa_supplicant.log hostapd.log
+  fi
+  printf 'Test passed\n'
+
+  # dhcpcd needs net.ipv4.conf.<interface>.promote_secondaries=1, and exits
+  # when it can't set it, as /proc/sys is read-only in the container
+  printf 'Testing %s gets a lease from kea-dhcp4 over the wifi...\n' "${dhcp_client}"
+  ip addr add 192.168.213.1/24 dev "${ap}"
+  cat > "${wifi_dir}/kea-dhcp4.conf" << EOF
+{ "Dhcp4": {
+  "interfaces-config": { "interfaces": [ "${ap}" ], "dhcp-socket-type": "raw" },
+  "lease-database": { "type": "memfile", "persist": false },
+  "valid-lifetime": 600,
+  "subnet4": [ { "id": 1, "subnet": "192.168.213.0/24",
+    "pools": [ { "pool": "192.168.213.100 - 192.168.213.150" } ] } ],
+  "loggers": [ { "name": "kea-dhcp4", "output-options": [ { "output": "stdout" } ], "severity": "INFO" } ]
+} }
+EOF
+  KEA_PIDFILE_DIR="${wifi_dir}" KEA_LOCKFILE_DIR="${wifi_dir}" kea-dhcp4 -c "${wifi_dir}/kea-dhcp4.conf" \
+    > "${wifi_dir}/kea-dhcp4.log" 2>&1 &
+  wifi_pids="${wifi_pids} $!"
+  if ! logged 15 kea-dhcp4.log 'DHCP4_STARTED'; then
+    wifi_fail "kea-dhcp4 did not start on ${ap}" kea-dhcp4.log
+  fi
+  if [ "${dhcp_client}" = dhcpcd ]; then
+    timeout 60 dhcpcd --oneshot --ipv4only --noipv4ll --timeout 45 "${client}" > "${wifi_dir}/dhcpcd.log" 2>&1 || true
+  else
+    timeout 60 dhclient -1 -v -pf "${wifi_dir}/dhclient.pid" -lf "${wifi_dir}/dhclient.leases" "${client}" \
+      > "${wifi_dir}/dhclient.log" 2>&1 || true
+  fi
+  if ! ip -4 addr show dev "${client}" | grep -q 'inet 192\.168\.213\.'; then
+    wifi_fail "${dhcp_client} on ${client} did not get a lease from kea-dhcp4 on ${ap}" "${dhcp_client}.log" kea-dhcp4.log
+  fi
+  printf 'Test passed\n'
+
+  printf 'Testing aireplay-ng --test...\n'
+  ip link set "${monitor}" down
+  iw dev "${monitor}" set type monitor
+  ip link set "${monitor}" up
+  iw dev "${monitor}" set channel 1
+  timeout 60 aireplay-ng --test -e rfhs-excessive "${monitor}" > "${wifi_dir}/aireplay-ng.log" 2>&1 || true
+  # it ends with how many of its 30 directed probes hostapd's AP answered
+  answered="$(tr '\r' '\n' < "${wifi_dir}/aireplay-ng.log" | sed -n 's/.* \([0-9]*\)\/30: *[0-9]*%$/\1/p' | tail -n 1)"
+  if ! grep -q 'Injection is working!' "${wifi_dir}/aireplay-ng.log" || [ "${answered:-0}" -lt 25 ]; then
+    wifi_fail "aireplay-ng --test on ${monitor} found injection not working, or hostapd's AP answered ${answered:-none} of 30 probes" aireplay-ng.log
+  fi
+  printf 'Test passed\n'
+  wifi_cleanup
 fi
 
 # Only a failing pass writes /root/HEALTHCHECK_DEGRADED, and it overwrites the
