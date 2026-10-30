@@ -154,3 +154,32 @@ sudo ./tools/test_contestant_images.sh my/kali:test my/parrot:test
 
 `STARTUP_WAIT` (default 120) is how long each image gets to start its
 services. It exits 1 if any image failed.
+
+## test_first_install_vm.sh
+
+Tests `misc/first_install` and the startup scripts on a fresh Ubuntu, as on
+a new AMI: it boots Ubuntu's cloud image for that release in a KVM VM,
+copies this checkout in, runs `first_install` twice (it has to be safe to
+run again), reboots so rc.local runs the startup scripts as at boot, and
+checks that openwrt and the four contestants are healthy, that every
+container runs unprivileged, that each contestant has its four radios, that
+rfctf-client's clients are running, and that docker remaps the contestants'
+root. With `ec2` the VM is made like Ubuntu's AMIs, which can't be
+downloaded: it switches to the `linux-aws` kernel they run, whose modules
+are packaged differently from the cloud image's generic kernel, boots with
+UEFI from an NVMe disk as on Nitro, and gives Amazon EC2 as its board vendor, so
+`first_install` takes its EC2 path and has to install the AWS CLI; the
+EC2-only startup scripts still fail there, with no instance metadata or
+credentials to use.
+
+```sh
+./tools/test_first_install_vm.sh 24.04 ec2
+./tools/test_first_install_vm.sh 26.04 other ~/vm-test
+```
+
+It needs KVM, QEMU, OVMF for `ec2`, one of cloud-localds, genisoimage or
+xorriso, and about 100 GB free in the work directory (by default
+`./first-install-vm-<release>-<platform>`), which keeps the cloud image for
+the next run. `VM_MEMORY` (default 12G) and `VM_CPUS` (default all) size the
+VM. `.github/workflows/first_install.yml` runs it for both releases and both
+platforms.
