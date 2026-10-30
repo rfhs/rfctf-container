@@ -16,12 +16,12 @@ needs() {
     unmet=1
   fi
 }
-needs first_install apt-get awk cat chmod cp cut dirname grep ln mkdir modinfo
+needs first_install apt-cache apt-get awk cat chmod cp cut dirname grep ln mkdir modinfo sed sleep uname
 # docker_userns_remap, which this runs once docker is installed
 needs docker_userns_remap awk getent grep mkdir python3 sed sleep touch useradd
 # The startup scripts this links into /etc/local.d don't check for
 # themselves, so a command one of them starts to run has to be added here.
-# docker and iw aren't checked, as this installs them below, and
+# docker, iw and aws aren't checked, as this installs them below, and
 # 07_rfctf-sdr.start and 08_fosphor_knob.start aren't linked.
 needs rfhs-container-init awk cat chown dirname find grep ip mkdir mount mountpoint rm sed sleep stat touch
 needs fixphy.sh cat find seq
@@ -37,16 +37,24 @@ needs 06_blackarch-contestant.start dirname seq sleep
 needs 97_nginx_proxy.start cat chown mkdir sleep
 needs 98_nginx_proxy_ssl.start cat sleep
 needs 99_notify-scoreboard.start cat
-# they only use these on EC2
+on_ec2=""
 if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
-  needs 00_aws_set_dns.start aws cloud-init curl
-  needs 99_notify-scoreboard.start aws curl uuidgen
+  on_ec2=1
+fi
+# they only use these on EC2
+if [ -n "${on_ec2}" ]; then
+  needs 00_aws_set_dns.start cloud-init curl
+  needs 99_notify-scoreboard.start curl uuidgen
+  # where the release has no awscli package
+  needs first_install snap
 fi
 if [ -n "${unmet}" ]; then
   exit 1
 fi
 
-# First we install packages we need
+# First we install packages we need; a fresh cloud image may have no
+# package lists yet
+apt-get update
 missing=""
 if [ ! -x "$(command -v docker)" ]; then
   missing="${missing} docker.io"
@@ -55,16 +63,23 @@ if [ ! -x "$(command -v iw)" ]; then
   missing="${missing} iw"
 fi
 if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
-  if [ -r "/sys/devices/virtual/dmi/id/board_vendor" ] && [ "$(cat /sys/devices/virtual/dmi/id/board_vendor)" = 'Amazon EC2' ]; then
-    missing="${missing} linux-modules-extra-aws"
+  missing="${missing} linux-modules-extra-$(uname -r)"
+fi
+aws_snap=""
+if [ -n "${on_ec2}" ] && [ ! -x "$(command -v aws)" ]; then
+  # Ubuntu 24.04 has no awscli package; AWS's snap stands in for it
+  if apt-cache policy awscli | sed -n 's/^  Candidate: //p' | grep -qv '^(none)$'; then
+    missing="${missing} awscli"
   else
-    missing="${missing} linux-modules-extra"
+    aws_snap=1
   fi
 fi
 if [ -n "${missing:-}" ]; then
-  apt-get update
   # shellcheck disable=SC2086
   apt-get -y install ${missing}
+fi
+if [ -n "${aws_snap}" ]; then
+  snap install aws-cli --classic
 fi
 
 # Before pulling anything: with the remapping on, docker keeps its images
@@ -125,6 +140,18 @@ EOF
 systemctl daemon-reload
 fi
 
+# pull image: docker pull, tried three times, as registries have bad moments
+pull() {
+  tries=0
+  until docker pull "${1}"; do
+    tries=$((tries + 1))
+    if [ "${tries}" -ge 3 ]; then
+      return 1
+    fi
+    sleep 30
+  done
+}
+
 # Now we grab the docker images we need
 for i in "$(pwd)"/../startup/0*; do
   if [ "${i}" = "$(pwd)/../startup/0*" ]; then
@@ -142,10 +169,10 @@ for i in "$(pwd)"/../startup/0*; do
     continue
   fi
   printf 'Pulling %s\n' "${image}"
-  docker pull "${image}"
+  pull "${image}"
 done
-docker pull certbot/certbot
-docker pull nginx
+pull certbot/certbot
+pull nginx
 
 # Prep some useful info for users logging in
 get_homedir() {
@@ -183,7 +210,7 @@ dot_file='bad'
 if [ ! -d /usr/local/bin ]; then
   mkdir -p /usr/local/bin
 fi
-cp /root/rfctf-container/misc/rfctf_status /usr/local/bin
+cp "$(dirname "${0}")"/rfctf_status /usr/local/bin
 if [ -n "${SUDO_USER:-}" ]; then
   if ! grep rfctf_status "$(get_homedir "${SUDO_USER}")/$(get_shell "${SUDO_USER}")"; then
     echo '/usr/local/bin/rfctf_status' >> "$(get_homedir "${SUDO_USER}")/$(get_shell "${SUDO_USER}")"
