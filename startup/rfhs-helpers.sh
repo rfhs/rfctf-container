@@ -131,17 +131,38 @@ usb_input_docker_args() {
 # default, which otherwise comes from the host.
 # dac_read_search: Pentoo's dumpcap has it as a file capability, so without
 # it in the container's bounding set dumpcap can't run and nothing captures.
-# seccomp=unconfined: docker's profile blocks user namespaces, which Firefox's
-# content sandbox and bwrap use.
+# seccomp: rfhs-contestant-seccomp.json, in the directory given (where this
+# file is), is docker's default profile from moby/profiles plus the user
+# namespaces Firefox's content sandbox and bwrap make.
 # apparmor=rfhs-contestant: docker's AppArmor profile plus bwrap's mounts,
 # without which Kali's and BlackArch's GTK abort when glycin can't sandbox
 # its image loaders; misc/contestant_apparmor loads the profile.
 contestant_docker_args() {
   printf '%s\n' --cap-add net_raw --cap-add net_admin --cap-add dac_read_search \
-    --security-opt seccomp=unconfined --sysctl net.ipv4.conf.default.promote_secondaries=1
+    --security-opt "seccomp=${1:?contestant_docker_args needs the directory of rfhs-contestant-seccomp.json}/rfhs-contestant-seccomp.json" \
+    --sysctl net.ipv4.conf.default.promote_secondaries=1
   if [ "$(cat /sys/module/apparmor/parameters/enabled 2> /dev/null)" = Y ]; then
     printf '%s\n' --security-opt apparmor=rfhs-contestant
   fi
+}
+
+# contestant_profiles_ready dir: whether the contestants' seccomp profile is
+# in dir, as contestant_docker_args uses it, and AppArmor, where it's on, has
+# loaded rfhs-contestant; otherwise says how to put them in place, as docker
+# run only says it can't find them
+contestant_profiles_ready() {
+  if [ ! -r "${1}/rfhs-contestant-seccomp.json" ]; then
+    printf "%s has no rfhs-contestant-seccomp.json, the contestants' seccomp profile; run misc/first_install from the rfctf-container checkout, which links it there with the startup scripts\n" "${1}" >&2
+    return 1
+  fi
+  [ "$(cat /sys/module/apparmor/parameters/enabled 2> /dev/null)" = Y ] || return 0
+  for profile in /sys/kernel/security/apparmor/policy/profiles/rfhs-contestant.*; do
+    if [ "$(cat "${profile}/name" 2> /dev/null)" = rfhs-contestant ]; then
+      return 0
+    fi
+  done
+  printf "AppArmor hasn't loaded rfhs-contestant, the contestants' profile; run misc/contestant_apparmor from the rfctf-container checkout as root (misc/first_install does)\n" >&2
+  return 1
 }
 
 rfctf_client_docker_args() {

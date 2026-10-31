@@ -56,7 +56,7 @@ for d in pentoo kali parrot blackarch; do
   # shellcheck disable=SC2046
   docker run --rm -d --no-healthcheck --name "bench-${d}" \
     --tmpfs /run:mode=0755,nosuid,nodev,nr_inodes=800k,size=20%,strictatime \
-    $(contestant_docker_args) "${img}"
+    $(contestant_docker_args ./startup) "${img}"
 done
 ```
 
@@ -187,24 +187,48 @@ VM. `.github/workflows/first_install.yml` runs it for both releases and both
 platforms.
 
 
-## profile_contestant_apparmor.sh
+## profile_contestant_security.sh
 
-Shows what the contestants need beyond docker's default AppArmor profile,
-so that `misc/contestant_apparmor`'s exceptions stay what they use. Run it
-on a game host with AppArmor (such as `test_first_install_vm.sh`'s VM, with
-auditd installed) while the contestants run. It loads `rfhs-contestant` in
-complain mode without its exceptions (`userns`, `mount` and `pivot_root`)
-and with docker's deny rules made audit rules, then in each container runs
-`contestant-checker excessive`, `test_healthcheck.sh`,
-`test_firefox_sandbox.sh`, a notification and the wireless tools (airmon-ng,
-airodump-ng, dumpcap, tshark, tcpdump, hcxdumptool, wash, mdk4, kismet,
-macchanger) on one of its radios. Then it loads the real profile again and
-prints the events counted: an `ALLOWED` event is one docker's profile
-denies, and an `AUDIT` one hit one of its deny rules. `-w seconds` waits in
-complain mode first, for restarting the contestants to include their
-startup.
+Shows what contestant images need beyond docker's default seccomp and
+AppArmor profiles, so that the contestants' exceptions in
+`startup/rfhs-contestant-seccomp.json` and `misc/contestant_apparmor` stay
+what they use. One image at a time, it starts a container as the build
+scripts do, with four radios from `give_hwsim_radios.sh`, but under the
+seccomp profile without its own rules (those commented `rfhs-contestant:`)
+and with every syscall it doesn't allow logged instead of denied, and on hosts with AppArmor under `rfhs-contestant` in complain mode
+without its exceptions (`userns`, `mount` and `pivot_root`) and with docker's
+deny rules made audit rules. Once its services have started (`STARTUP_WAIT`,
+default 120 s) it runs `contestant-checker excessive`, `test_healthcheck.sh`,
+`test_firefox_sandbox.sh`, a notification and the wireless tools
+(airmon-ng, airodump-ng, dumpcap, tshark, tcpdump, hcxdumptool, wash, mdk4,
+kismet, macchanger) on one of its radios. Then it loads the real AppArmor
+profile again and prints the syscalls the seccomp profile would deny, by
+command, and the AppArmor events: an `ALLOWED` event is one docker's
+profile denies, and an `AUDIT` one hit one of its deny rules. Run it on an
+Ubuntu host or `test_first_install_vm.sh`'s VM, with auditd, `rfkill` and
+radios no container is using (stop the game's contestants first):
 
 ```sh
-sudo apt-get install auditd
-sudo ./tools/profile_contestant_apparmor.sh kali-contestant parrot-contestant blackarch-contestant pentoo-contestant
+sudo apt-get install auditd rfkill
+sudo ./tools/profile_contestant_security.sh ghcr.io/rfhs/kali ghcr.io/rfhs/parrot ghcr.io/rfhs/blackarch rfhs/pentoo
+```
+
+## check_contestant_profiles.py
+
+Docker can't extend its default seccomp and AppArmor profiles, only replace
+them, so the contestants' profiles are copies of moby/profiles' defaults
+with their own rules added, and docker's later fixes don't reach them by
+themselves. This fetches moby/profiles' main branch and fails, with a diff,
+unless `startup/rfhs-contestant-seccomp.json` is exactly `seccomp/default.json`
+plus the rules whose comment starts with `rfhs-contestant:`, and the profile
+in `misc/contestant_apparmor` is `apparmor/template.go`'s rendered for
+`rfhs-contestant`, without `deny mount,` (a deny rule wins over bwrap's mount
+rules), followed by its own rules from the `${userns}` line. `--sync`
+rewrites both from upstream and keeps the contestants' rules; then test them
+and commit. `.github/workflows/contestant_profiles.yml` runs the check
+daily and on changes to them.
+
+```sh
+./tools/check_contestant_profiles.py
+./tools/check_contestant_profiles.py --sync
 ```

@@ -1,0 +1,46 @@
+name: contestant_profiles
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - startup/rfhs-contestant-seccomp.json
+      - misc/contestant_apparmor
+      - tools/check_contestant_profiles.py
+      - .github/workflows/contestant_profiles.yml
+  pull_request:
+    paths: *paths
+  # docker's default profiles change without any change here.
+  schedule:
+    - cron: '29 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Compare the contestants' profiles with docker's current defaults
+        run: |
+          if ! ./tools/check_contestant_profiles.py > "${RUNNER_TEMP}/check.log"; then
+            cat "${RUNNER_TEMP}/check.log"
+            {
+              printf '## The contestant profiles are behind docker'"'"'s defaults\n\n```\n'
+              sed -n '/^These differ/,$p' "${RUNNER_TEMP}/check.log"
+              printf '```\n'
+            } >> "${GITHUB_STEP_SUMMARY}"
+            printf '::error::%s\n' "The contestants' seccomp or AppArmor profile differs from docker's current defaults; run ./tools/check_contestant_profiles.py --sync, test and commit (see the log)"
+            exit 1
+          fi
+          cat "${RUNNER_TEMP}/check.log"

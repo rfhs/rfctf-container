@@ -14,10 +14,11 @@ if [ -n "$(docker ps --filter name="rfhs-${DISTRO}-ci" --format '{{ .ID }}' )" ]
 	echo "Found existing rfhs-${DISTRO}-ci container... QUITTING"
 	exit 1
 fi
+. ../startup/rfhs-helpers.sh
+contestant_profiles_ready ../startup || exit 1
 docker pull docker.io/blackarchlinux/blackarch:latest
 docker build --no-cache . --progress=plain -f "Dockerfile.${DISTRO}" -t rfhs/${DISTRO}:${VERS}
 docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
-. ../startup/rfhs-helpers.sh
 # docker's own healthcheck runs would race the tests' runs of the checker
 # The game's privileges and, as the game gives each contestant, four radios,
 # for contestant-checker excessive's wifi tests
@@ -26,7 +27,7 @@ docker tag rfhs/${DISTRO}:${VERS} rfhs/${DISTRO}:latest
 '
   set -f
   # shellcheck disable=SC2046
-  docker run -d --rm --no-healthcheck --name "rfhs-${DISTRO}-ci" $(contestant_docker_args) "rfhs/${DISTRO}"
+  docker run -d --rm --no-healthcheck --name "rfhs-${DISTRO}-ci" $(contestant_docker_args ../startup) "rfhs/${DISTRO}"
 )
 sudo ../tools/give_hwsim_radios.sh "rfhs-${DISTRO}-ci" 4
 STARTUP_WAIT="${STARTUP_WAIT:-30}"

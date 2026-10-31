@@ -14,6 +14,7 @@ on:
       - tools/bench_healthcheck.sh
       - contestant_containers/files/contestant_start
       - startup/rfhs-helpers.sh
+      - startup/rfhs-contestant-seccomp.json
       - misc/docker_userns_remap
       - misc/contestant_apparmor
       - tools/give_hwsim_radios.sh

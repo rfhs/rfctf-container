@@ -28,6 +28,7 @@ fi
 
 here="$(dirname "${0}")"
 . "${here}/../startup/rfhs-helpers.sh"
+contestant_profiles_ready "${here}/../startup" || exit 1
 
 # hwsim_radios_home: whether every mac80211_hwsim radio is back in this
 # namespace, as they come back a moment after their container stops
@@ -51,7 +52,7 @@ for image in "$@"; do
 '
     set -f
     # shellcheck disable=SC2046
-    docker run -d --rm --no-healthcheck --name "${c}" $(contestant_docker_args) "${image}" > /dev/null
+    docker run -d --rm --no-healthcheck --name "${c}" $(contestant_docker_args "${here}/../startup") "${image}" > /dev/null
   )
   "${here}/give_hwsim_radios.sh" "${c}" 4
   printf 'Waiting %s s for %s to start its services...\n' "${STARTUP_WAIT:-120}" "${image}"

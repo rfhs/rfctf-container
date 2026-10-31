@@ -3,8 +3,8 @@
 # container: each runs in a user namespace of its own, under a seccomp
 # filter. Docker's default seccomp and AppArmor profiles deny the user
 # namespaces, and Firefox then runs its content without them, so this fails
-# if the contestants lose seccomp=unconfined or the userns rule in
-# misc/contestant_apparmor.
+# if the contestants lose the user namespace rules in
+# startup/rfhs-contestant-seccomp.json or misc/contestant_apparmor.
 #   ./contestant_containers/tests/test_firefox_sandbox.sh container
 set -eu
 
