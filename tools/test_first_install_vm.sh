@@ -155,7 +155,7 @@ vm cloud-init status --wait > /dev/null || true
 if [ "${platform}" = ec2 ]; then
   # The cloud image runs the generic kernel; the AMIs run linux-aws, whose
   # modules are packaged differently
-  vm 'sudo apt-get -q update > /dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get -q install -y linux-aws > /dev/null &&
+  vm 'sudo apt-get -q update --error-on=any > /dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get -q install -y linux-aws > /dev/null &&
     echo GRUB_FLAVOUR_ORDER=aws | sudo tee /etc/default/grub.d/99-linux-aws.cfg > /dev/null && sudo update-grub 2> /dev/null'
   reboot_vm
   check 'the VM runs the linux-aws kernel, as the AMIs do' 'uname -r | grep -q -- "-aws\$"'

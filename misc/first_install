@@ -54,7 +54,7 @@ fi
 
 # First we install packages we need; a fresh cloud image may have no
 # package lists yet
-apt-get update
+apt-get update --error-on=any
 missing=""
 if [ ! -x "$(command -v docker)" ]; then
   missing="${missing} docker.io"

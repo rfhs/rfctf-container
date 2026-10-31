@@ -96,7 +96,7 @@ jobs:
       - name: Set up mac80211_hwsim
         if: inputs.hwsim
         run: |
-          sudo apt-get update
+          sudo apt-get update --error-on=any
           sudo apt-get install -y iw rfkill
           if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
             sudo apt-get install -y --no-install-recommends "linux-modules-extra-$(uname -r)" || true
@@ -132,7 +132,7 @@ jobs:
           EXTRA_PACKAGES: ${{ inputs.extra-packages }}
         run: |
           if [ -n "${EXTRA_PACKAGES}" ]; then
-            sudo apt-get update
+            sudo apt-get update --error-on=any
             # shellcheck disable=SC2086
             sudo apt-get install -y --no-install-recommends ${EXTRA_PACKAGES}
           fi
