@@ -36,3 +36,22 @@ supervisord has started everything, then, from `contestant_containers`:
 ```
 
 It prints PASS or FAIL for each check and exits 1 if any failed.
+
+## test_firefox_sandbox.sh
+
+Tests that Firefox sandboxes its content processes in a running contestant
+container: it starts a headless Firefox with a new profile and passes once
+one of its content processes runs in a user namespace of its own under a
+seccomp filter. Docker's default seccomp profile denies the user namespaces
+and Firefox then runs its content without them, so this fails if the
+contestants lose `seccomp=unconfined`, or on AppArmor hosts the `userns`
+rule in `misc/contestant_apparmor`'s profile. The build scripts run it after
+`test_healthcheck.sh`, and `tools/test_first_install_vm.sh` in each
+contestant of its VM.
+
+```sh
+./tests/test_firefox_sandbox.sh bench-kali
+```
+
+It prints PASS or FAIL, with the content processes it found, and exits 1 on
+a failure.

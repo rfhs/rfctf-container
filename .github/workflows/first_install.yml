@@ -6,8 +6,10 @@ on:
     paths: &paths
       - misc/first_install
       - misc/docker_userns_remap
+      - misc/contestant_apparmor
       - startup/**
       - tools/test_first_install_vm.sh
+      - contestant_containers/tests/test_firefox_sandbox.sh
       - .github/workflows/first_install.yml
   pull_request:
     paths: *paths

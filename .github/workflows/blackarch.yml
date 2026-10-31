@@ -10,10 +10,12 @@ on:
       - contestant_containers/files/supervisord-blackarch.conf
       - contestant_containers/files/contestant-checker
       - contestant_containers/tests/test_healthcheck.sh
+      - contestant_containers/tests/test_firefox_sandbox.sh
       - tools/bench_healthcheck.sh
       - contestant_containers/files/contestant_start
       - startup/rfhs-helpers.sh
       - misc/docker_userns_remap
+      - misc/contestant_apparmor
       - tools/give_hwsim_radios.sh
       - infrastructure_containers/tools/build_mac80211_hwsim.sh
       - .github/workflows/blackarch.yml
@@ -39,7 +41,7 @@ jobs:
     with:
       directory: contestant_containers
       script: build-blackarch
-      userns-remap: true
+      contestant-host: true
       hwsim: true
       startup-wait: '120'
       timeout-minutes: 180

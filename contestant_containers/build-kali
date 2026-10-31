@@ -35,6 +35,7 @@ sleep "${STARTUP_WAIT}"
 if ../tools/bench_healthcheck.sh -t 100 "rfhs-${DISTRO}-ci" \
   && docker exec "rfhs-${DISTRO}-ci" /usr/local/sbin/contestant-checker excessive \
   && ./tests/test_healthcheck.sh "rfhs-${DISTRO}-ci" \
+  && ./tests/test_firefox_sandbox.sh "rfhs-${DISTRO}-ci" \
   && ./tests/test_kali_panel_trim.sh "rfhs-${DISTRO}-ci"; then
   docker stop "rfhs-${DISTRO}-ci"
   if [ "$(hostname)" = "Nu" ] ; then

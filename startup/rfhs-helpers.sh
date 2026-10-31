@@ -133,9 +133,15 @@ usb_input_docker_args() {
 # it in the container's bounding set dumpcap can't run and nothing captures.
 # seccomp=unconfined: docker's profile blocks user namespaces, which Firefox's
 # content sandbox and bwrap use.
+# apparmor=rfhs-contestant: docker's AppArmor profile plus bwrap's mounts,
+# without which Kali's and BlackArch's GTK abort when glycin can't sandbox
+# its image loaders; misc/contestant_apparmor loads the profile.
 contestant_docker_args() {
   printf '%s\n' --cap-add net_raw --cap-add net_admin --cap-add dac_read_search \
     --security-opt seccomp=unconfined --sysctl net.ipv4.conf.default.promote_secondaries=1
+  if [ "$(cat /sys/module/apparmor/parameters/enabled 2> /dev/null)" = Y ]; then
+    printf '%s\n' --security-opt apparmor=rfhs-contestant
+  fi
 }
 
 rfctf_client_docker_args() {

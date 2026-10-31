@@ -144,9 +144,10 @@ Tests contestant images the way their build scripts do, without building or
 pushing them, e.g. images built by hand under another tag. One at a time,
 each runs with the game's privileges (`contestant_docker_args`) and four
 radios from `give_hwsim_radios.sh`, then gets `bench_healthcheck.sh -t 100`,
-`contestant-checker excessive` and
-`contestant_containers/tests/test_healthcheck.sh`. It needs root, for the
-radios.
+`contestant-checker excessive`,
+`contestant_containers/tests/test_healthcheck.sh` and
+`contestant_containers/tests/test_firefox_sandbox.sh`. It needs root, for
+the radios.
 
 ```sh
 sudo ./tools/test_contestant_images.sh my/kali:test my/parrot:test
@@ -163,9 +164,10 @@ copies this checkout in, runs `first_install` twice (it has to be safe to
 run again), reboots so rc.local runs the startup scripts as at boot, and
 checks that openwrt and the four contestants are healthy, that every
 container runs unprivileged, that each contestant has its four radios, that
-rfctf-client's clients are running, and that docker remaps the contestants'
-root. With `ec2` the VM is made like Ubuntu's AMIs, which can't be
-downloaded: it switches to the `linux-aws` kernel they run, whose modules
+rfctf-client's clients are running, that docker remaps the contestants'
+root, and that each contestant shows notifications (GTK loading icons under
+Ubuntu's AppArmor) and sandboxes Firefox's content processes. With `ec2`
+the VM is made like Ubuntu's AMIs, which can't be downloaded: it switches to the `linux-aws` kernel they run, whose modules
 are packaged differently from the cloud image's generic kernel, boots with
 UEFI from an NVMe disk as on Nitro, and gives Amazon EC2 as its board vendor, so
 `first_install` takes its EC2 path and has to install the AWS CLI; the
@@ -183,3 +185,26 @@ xorriso, and about 100 GB free in the work directory (by default
 the next run. `VM_MEMORY` (default 12G) and `VM_CPUS` (default all) size the
 VM. `.github/workflows/first_install.yml` runs it for both releases and both
 platforms.
+
+
+## profile_contestant_apparmor.sh
+
+Shows what the contestants need beyond docker's default AppArmor profile,
+so that `misc/contestant_apparmor`'s exceptions stay what they use. Run it
+on a game host with AppArmor (such as `test_first_install_vm.sh`'s VM, with
+auditd installed) while the contestants run. It loads `rfhs-contestant` in
+complain mode without its exceptions (`userns`, `mount` and `pivot_root`)
+and with docker's deny rules made audit rules, then in each container runs
+`contestant-checker excessive`, `test_healthcheck.sh`,
+`test_firefox_sandbox.sh`, a notification and the wireless tools (airmon-ng,
+airodump-ng, dumpcap, tshark, tcpdump, hcxdumptool, wash, mdk4, kismet,
+macchanger) on one of its radios. Then it loads the real profile again and
+prints the events counted: an `ALLOWED` event is one docker's profile
+denies, and an `AUDIT` one hit one of its deny rules. `-w seconds` waits in
+complain mode first, for restarting the contestants to include their
+startup.
+
+```sh
+sudo apt-get install auditd
+sudo ./tools/profile_contestant_apparmor.sh kali-contestant parrot-contestant blackarch-contestant pentoo-contestant
+```

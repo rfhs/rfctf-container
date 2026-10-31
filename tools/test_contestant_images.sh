@@ -2,7 +2,8 @@
 # Tests contestant images as their build scripts do, without building or
 # pushing them: one at a time, each runs with the game's privileges and four
 # mac80211_hwsim radios, and gets the healthcheck benchmark, contestant-checker
-# excessive and contestant_containers/tests/test_healthcheck.sh. Needs root,
+# excessive, contestant_containers/tests/test_healthcheck.sh and
+# contestant_containers/tests/test_firefox_sandbox.sh. Needs root,
 # for the radios.
 #   sudo ./tools/test_contestant_images.sh image...
 # STARTUP_WAIT (default 120) is how long each gets to start its services.
@@ -57,7 +58,8 @@ for image in "$@"; do
   sleep "${STARTUP_WAIT:-120}"
   if "${here}/bench_healthcheck.sh" -t 100 "${c}" \
     && docker exec "${c}" /usr/local/sbin/contestant-checker excessive \
-    && "${here}/../contestant_containers/tests/test_healthcheck.sh" "${c}"; then
+    && "${here}/../contestant_containers/tests/test_healthcheck.sh" "${c}" \
+    && "${here}/../contestant_containers/tests/test_firefox_sandbox.sh" "${c}"; then
     printf '%s passed\n' "${image}"
   else
     printf '%s FAILED\n' "${image}"

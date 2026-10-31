@@ -19,6 +19,7 @@ needs() {
 needs first_install apt-cache apt-get awk cat chmod cp cut dirname grep ln mkdir modinfo sed sleep uname
 # docker_userns_remap, which this runs once docker is installed
 needs docker_userns_remap awk getent grep mkdir python3 sed sleep touch useradd
+needs contestant_apparmor cat cmp mv
 # The startup scripts this links into /etc/local.d don't check for
 # themselves, so a command one of them starts to run has to be added here.
 # docker, iw and aws aren't checked, as this installs them below, and
@@ -85,6 +86,7 @@ fi
 # Before pulling anything: with the remapping on, docker keeps its images
 # apart from the ones it had without it
 "$(dirname "${0}")"/docker_userns_remap
+"$(dirname "${0}")"/contestant_apparmor
 
 # Then we setup our startup sequence
 [ ! -d '/etc/local.d' ] && mkdir -p /etc/local.d

@@ -1,0 +1,105 @@
+#!/bin/sh
+# Loads rfhs-contestant, the AppArmor profile the contestants run under on
+# hosts with AppArmor: docker's default profile, from moby/profiles'
+# apparmor/template.go, plus what their sandboxes need. Firefox's content
+# sandbox makes user namespaces, which Ubuntu gives only to a profile that
+# allows them. bwrap, which glycin (Kali's and BlackArch's image loader)
+# sandboxes with, also mounts its new root and pivots into it, and their GTK
+# aborts on the icons glycin can't load. Does nothing without AppArmor. Safe
+# to run again. Needs root.
+#   sudo ./misc/contestant_apparmor
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  printf 'Run it as root\n' >&2
+  exit 1
+fi
+if [ "$(cat /sys/module/apparmor/parameters/enabled 2> /dev/null)" != Y ]; then
+  printf "AppArmor is off, so the contestants don't need a profile\n"
+  exit 0
+fi
+missing_tools=""
+for tool in apparmor_parser cat cmp mv; do
+  command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
+done
+if [ -n "${missing_tools}" ]; then
+  printf '%s: required commands not found:%s\n' "${0##*/}" "${missing_tools}" >&2
+  exit 1
+fi
+
+profile=/etc/apparmor.d/rfhs-contestant
+# AppArmor before 4.0 has no userns rule, and doesn't restrict them
+abi=""
+userns=""
+if [ -e /etc/apparmor.d/abi/4.0 ]; then
+  abi="abi <abi/4.0>,"
+  userns="  userns,"
+fi
+cat > "${profile}.new" << EOF
+${abi}
+include <tunables/global>
+
+profile rfhs-contestant flags=(attach_disconnected,mediate_deleted) {
+  include <abstractions/base>
+
+  network,
+  deny network ax25,
+  deny network ipx,
+  deny network appletalk,
+  deny network netrom,
+  deny network rose,
+  deny network econet,
+  deny network atmsvc,
+  deny network irda,
+  deny network wanpipe,
+  deny network isdn,
+  deny network caif,
+  deny network alg,
+  deny network vsock,
+  capability,
+  file,
+  umount,
+  signal (receive) peer=unconfined,
+  signal (receive) peer=runc,
+  signal (receive) peer=crun,
+  signal (send,receive) peer=rfhs-contestant,
+
+  deny @{PROC}/* w,
+  deny @{PROC}/{[^1-9/],[^1-9/][^0-9/],[^1-9s/][^0-9y/][^0-9s/],[^1-9/][^0-9/][^0-9/][^0-9/]*}/** w,
+  deny @{PROC}/sys/[^k]** w,
+  deny @{PROC}/sys/kernel/{?,??,[^s][^h][^m]**} w,
+  deny @{PROC}/sysrq-trigger rwklx,
+  deny @{PROC}/kcore rwklx,
+
+  deny /sys/[^f]*/** wklx,
+  deny /sys/f[^s]*/** wklx,
+  deny /sys/fs/[^c]*/** wklx,
+  deny /sys/fs/c[^g]*/** wklx,
+  deny /sys/fs/cg[^r]*/** wklx,
+  deny /sys/firmware/** rwklx,
+  deny /sys/devices/virtual/powercap/** rwklx,
+  deny /sys/kernel/security/** rwklx,
+
+  ptrace (trace,tracedby,read,readby) peer=rfhs-contestant,
+
+${userns}
+  # bwrap's, in the mount namespace of its own user namespace
+  mount options=(rw, silent, rslave) -> /,
+  mount options=(rw, silent, rprivate) -> /oldroot/,
+  mount fstype=tmpfs options=(rw, nosuid, nodev) tmpfs -> /tmp/,
+  mount fstype=tmpfs options=(rw, nosuid, nodev) tmpfs -> /newroot/**,
+  mount fstype=devpts options=(rw, nosuid, noexec) devpts -> /newroot/dev/pts/,
+  mount options=(rw, rbind) /tmp/newroot/ -> /tmp/newroot/,
+  mount options=(rw, rbind) /oldroot/proc/ -> /proc/,
+  mount options=(rw, rbind) /oldroot/** -> /newroot/**,
+  pivot_root oldroot=/tmp/oldroot/ /tmp/,
+  pivot_root oldroot=/newroot/ /newroot/,
+}
+EOF
+if cmp -s "${profile}.new" "${profile}"; then
+  rm "${profile}.new"
+else
+  mv "${profile}.new" "${profile}"
+fi
+apparmor_parser -r "${profile}"
+printf 'AppArmor has the rfhs-contestant profile\n'

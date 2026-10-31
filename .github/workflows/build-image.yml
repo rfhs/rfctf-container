@@ -23,8 +23,8 @@ on:
         description: The test needs mac80211_hwsim radios and the host's iw and rfkill
         type: boolean
         default: false
-      userns-remap:
-        description: Build and test with docker's user namespace remapping, as the game hosts run it
+      contestant-host:
+        description: Build and test with docker's user namespace remapping and the contestants' AppArmor profile, as the game hosts run them
         type: boolean
         default: false
       startup-wait:
@@ -115,9 +115,11 @@ jobs:
           iw dev
           sudo modprobe -r mac80211_hwsim
 
-      - name: Turn on docker's user namespace remapping
-        if: inputs.userns-remap
-        run: sudo "${GITHUB_WORKSPACE}/misc/docker_userns_remap"
+      - name: Set docker up as on the game hosts
+        if: inputs.contestant-host
+        run: |
+          sudo "${GITHUB_WORKSPACE}/misc/docker_userns_remap"
+          sudo "${GITHUB_WORKSPACE}/misc/contestant_apparmor"
 
       - name: Build and test
         env:

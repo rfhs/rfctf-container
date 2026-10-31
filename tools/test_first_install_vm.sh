@@ -4,7 +4,8 @@
 # this checkout in, runs first_install twice (it has to be safe to run again),
 # reboots so rc.local runs the startup scripts as at boot, and checks the game
 # came up: openwrt and the contestants healthy, rfctf-client's clients
-# running and trying to connect, docker remapping the contestants' root.
+# running and trying to connect, docker remapping the contestants' root, and
+# the contestants showing notifications and sandboxing Firefox.
 # With "ec2" the VM is made like Ubuntu's AMIs: it boots the linux-aws kernel
 # they run, with UEFI from an NVMe disk, and says its board vendor is Amazon
 # EC2, so first_install takes its EC2 path (the AWS CLI); the EC2-only startup
@@ -226,6 +227,10 @@ done
 for c in pentoo-contestant kali-contestant parrot-contestant blackarch-contestant; do
   check "${c} runs unprivileged with its four radios" \
     "[ \"\$(sudo docker inspect -f '{{.HostConfig.Privileged}}' ${c})\" = false ] && [ \"\$(sudo docker exec ${c} sh -c 'iw dev | grep -c Interface')\" = 4 ]"
+  # the healthcheck's popups, and GTK loading icons under the host's AppArmor
+  check "${c} shows notifications" "sudo docker exec ${c} notify-send 'first_install test' 'Works' --icon=dialog-information"
+  check "${c} sandboxes Firefox's content" \
+    "sudo /opt/rfctf-container/contestant_containers/tests/test_firefox_sandbox.sh ${c}"
 done
 
 if [ "${failures}" -ne 0 ]; then
