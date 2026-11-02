@@ -50,8 +50,8 @@ docker run --rm -v "$PWD:/work" -w /work docker.io/pentoolinux/pentoo-core:lates
 - It exits 1 with a warning if the tree is more than 7 days old.
 - The tarball's mtime is the gentoo-mirror commit's time, so the build
   scripts' 7-day check is on the age of the tree, not of the file.
-- Other overrides: `TREE_URL` (default `https://pentoo.glpgs.io/TREE`),
-  `BINHOST` (default `https://pentoo.glpgs.io/Packages/amd64_23.0s-hardened`,
+- Other overrides: `TREE_URL` (default `https://www.pentoo.ch/isos/TREE`),
+  `BINHOST` (default `https://www.pentoo.ch/isos/Packages/amd64_23.0s-hardened`,
   the profile pentoo-core uses, whose index `TIMESTAMP` is checked against
   `TREE`), `GENTOO_GIT`, `GENTOO_BRANCH`, `PENTOO_GIT`, `PENTOO_BRANCH`.
 
@@ -61,8 +61,8 @@ about a minute and downloads about 130 MB; the tarball is about 35 MB.
 ## TREE
 
 pentoo-livecd's `specs/snap.sh` writes it at the end of every snapshot, to
-`/catalyst/packages/local_mirror/TREE` on the build host, which the mirror
-serves as `https://pentoo.glpgs.io/TREE` for every profile:
+`/catalyst/packages/local_mirror/TREE` on the build host, which the Pentoo site
+serves as `https://www.pentoo.ch/isos/TREE` for every profile:
 
 ```
 PUBLISHED: 1792776600

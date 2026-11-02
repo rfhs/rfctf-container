@@ -1,8 +1,11 @@
+# The binhost make_gentoo_cache.sh matched the trees to, not the profile's mirrors
+ARG PORTAGE_BINHOST=https://www.pentoo.ch/isos/Packages/amd64_23.0s-hardened/
 FROM scratch AS portage
 ADD portage_and_overlay.tar.xz /
 
 # Keep this stage identical in Dockerfile.rfctf-client and Dockerfile.rfctf-sdr: both images share its layers
 FROM docker.io/pentoolinux/pentoo-core:latest AS rfctf-minimal
+ARG PORTAGE_BINHOST
 # setup FEATURES and use flags
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
 # --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into these layers
@@ -16,6 +19,7 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc}/*
 
 FROM rfctf-minimal AS rfctf-sdr
+ARG PORTAGE_BINHOST
 # install the actual metapackage
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && \

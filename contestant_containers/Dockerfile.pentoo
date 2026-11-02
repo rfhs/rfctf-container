@@ -1,7 +1,10 @@
+# The binhost make_gentoo_cache.sh matched the trees to, not the profile's mirrors
+ARG PORTAGE_BINHOST=https://www.pentoo.ch/isos/Packages/amd64_23.0s-hardened/
 FROM scratch AS portage
 ADD portage_and_overlay.tar.xz /
 
 FROM docker.io/pentoolinux/pentoo-core:latest
+ARG PORTAGE_BINHOST
 # setup FEATURES and use flags
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
   #sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl#' /etc/portage/make.conf && \

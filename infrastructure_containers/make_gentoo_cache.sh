@@ -19,9 +19,9 @@ if [ -n "${missing_tools}" ]; then
 fi
 
 OUTPUT="${1:-portage_and_overlay.tar.xz}"
-BINHOST="${BINHOST:-https://pentoo.glpgs.io/Packages/amd64_23.0s-hardened}"
+BINHOST="${BINHOST:-https://www.pentoo.ch/isos/Packages/amd64_23.0s-hardened}"
 BINHOST="${BINHOST%/}"
-TREE_URL="${TREE_URL:-https://pentoo.glpgs.io/TREE}"
+TREE_URL="${TREE_URL:-https://www.pentoo.ch/isos/TREE}"
 GENTOO_GIT="${GENTOO_GIT:-https://github.com/gentoo-mirror/gentoo.git}"
 GENTOO_BRANCH="${GENTOO_BRANCH:-stable}"
 GENTOO_KEY="${GENTOO_KEY:-/usr/share/openpgp-keys/gentoo-release.asc}"
