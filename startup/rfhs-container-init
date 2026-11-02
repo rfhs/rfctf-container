@@ -209,9 +209,9 @@ if [ -n "${CONTAINER_PHYS}" ]; then
 fi
 
 if [ "${CONTAINER_NAME}" = "openwrt" ]; then
-  if [ -x /root/wctf-restricted/wifi/openwrt/airkraken/secret-sauce.sh ]; then
+  if [ -x /root/wctf-restricted/wifi/openwrt/airkraken/secret_sauce.sh ]; then
     printf "Sleeping before running the secret-sauce...\n"
     sleep 30
-    /root/wctf-restricted/wifi/openwrt/airkraken/secret-sauce.sh
+    /root/wctf-restricted/wifi/openwrt/airkraken/secret_sauce.sh
   fi
 fi
