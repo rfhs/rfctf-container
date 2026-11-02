@@ -34,7 +34,7 @@ RUN portageq has_version / '>=net-wireless/gnuradio-3.11_pre20260615-r1'
 RUN portageq has_version / '>=net-wireless/gr-tenna-0.0_p20260506'
 
 # setup challengectl
-ADD "https://api.github.com/repos/rfhs/challengectl/commits?per_page=1" latest_commit
+#ADD "https://api.github.com/repos/rfhs/challengectl/commits?per_page=1" latest_commit
 WORKDIR /root/
 RUN git clone https://github.com/rfhs/challengectl.git --depth 1
 
