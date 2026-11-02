@@ -12,7 +12,7 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl rfctf-minimal#' /etc/portage/make.conf && \
   # install the minimal metapackage
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/rfctf-client && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want
@@ -23,7 +23,7 @@ ARG PORTAGE_BINHOST
 # install the actual metapackage
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   sed -i 's#rfctf-minimal#rfctf-sdr rfctf-minimal#' /etc/portage/make.conf && \
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse pentoo/rfctf-client && \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
   # rm all the files we don't want

@@ -18,7 +18,7 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   mkdir -p /etc/portage/package.accept_keywords && \
   echo 'net-wireless/fosphor_knob' > /etc/portage/package.accept_keywords/fosphor_knob && \
   # --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into this layer
-  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --newuse \
+  emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use \
     '>=net-wireless/fosphor_knob-0.18' pentoo/pentoo-opencl && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
