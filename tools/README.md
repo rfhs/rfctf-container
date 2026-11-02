@@ -18,6 +18,9 @@ healthcheck takes over 100 ms or any run of it fails.
 - openwrt's `docker-build.sh`, in [rfhs/openwrt](https://github.com/rfhs/openwrt),
   benches `rfhs_checker` from an rfctf-container checkout, by default
   `~/development/rfhs/rfctf-container` (set `RFCTF_CONTAINER` for another).
+  Its `tests/test_firewall.sh` starts the image with `openwrt_docker_args`,
+  `openwrt_overlay_args` and `openwrt_start` from the same checkout, so it
+  tests the privileges, overlay and network order the game uses.
 
 It first waits up to 300 s for every container to be healthy, as docker
 means it: the healthcheck passed once. Those checks run with a `notify-send`

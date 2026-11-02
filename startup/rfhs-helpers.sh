@@ -192,3 +192,19 @@ openwrt_docker_args() {
     --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.default.forwarding=1 \
     --sysctl net.ipv6.conf.all.accept_ra=0 --sysctl net.ipv6.conf.default.accept_ra=0
 }
+
+# openwrt_start container network: starts it and connects its eth1. docker
+# picks the order of the networks a container has before it starts, so with
+# both its VLANs' eth0 and wan's eth1 could swap.
+openwrt_start() {
+  docker start "${1}"
+  docker network connect "${2}" "${1}"
+}
+
+# Mounts the files in the directory given over openwrt's, read-only, at their
+# paths under it
+openwrt_overlay_args() {
+  find "${1}" \( -type f -o -type l \) ! -path '*shared_persistent_storage*' | while read -r file; do
+    printf '%s\n' -v "${file}:${file#"${1}"}:ro"
+  done
+}
