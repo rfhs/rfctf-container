@@ -139,7 +139,9 @@ sudo ./tools/give_hwsim_radios.sh rfhs-kali-ci 4
 It loads mac80211_hwsim with that many radios when it isn't loaded, and
 reloads it with that many when too few are free but none is in another
 namespace. When other containers hold the rest, it fails rather than take
-theirs. The radios go back to the host when the container stops.
+theirs. The radios go back to the host when the container stops, keeping the
+names they had in it, so it first names every free radio `phy` and its index
+again.
 
 ## test_contestant_images.sh
 

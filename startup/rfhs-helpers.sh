@@ -27,6 +27,21 @@ is_vm() {
   return 1
 }
 
+# hwsim_phy_names: names each mac80211_hwsim radio in this namespace phy and
+# its wiphy index again. A radio back from a stopped container keeps the name
+# it had there, such as openwrt's zphy0b, and a phy's name has to be unique
+# across every namespace. Needs root.
+hwsim_phy_names() {
+  for phy in /sys/class/ieee80211/*; do
+    if [ -e "${phy}/device/uevent" ] && grep -q '^DRIVER=mac80211_hwsim$' "${phy}/device/uevent"; then
+      index="$(cat "${phy}/index")"
+      if [ "${phy##*/}" != "phy${index}" ]; then
+        iw phy "${phy##*/}" set name "phy${index}"
+      fi
+    fi
+  done
+}
+
 # The *_args functions print docker run arguments one per line, which
 # rfhs-container-init splits on newlines; warnings go to stderr.
 

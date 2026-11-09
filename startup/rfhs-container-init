@@ -50,6 +50,7 @@ if [ -n "$(docker ps --filter name="${CONTAINER_NAME}" --format '{{ .ID }}' )" ]
 fi
 
 if [ -n "${CONTAINER_PHYS}" ]; then
+  hwsim_phy_names
   for phy_num in ${CONTAINER_PHYS}; do
     if [ ! -L "/sys/class/ieee80211/phy${phy_num}" ]; then
       echo "WARNING: phy${phy_num} is not found in /sys/class/ieee80211"

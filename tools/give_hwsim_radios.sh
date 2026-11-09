@@ -25,6 +25,7 @@ if [ "$#" -ne 2 ]; then
 fi
 container="${1}"
 count="${2}"
+. "$(dirname "${0}")/../startup/rfhs-helpers.sh"
 
 # free_radios: the mac80211_hwsim phys in this namespace, one per line
 free_radios() {
@@ -56,6 +57,9 @@ if [ "${free_count}" -lt "${count}" ]; then
   sleep 2
   free="$(free_radios)"
 fi
+
+hwsim_phy_names
+free="$(free_radios)"
 
 pid="$(docker inspect -f '{{.State.Pid}}' "${container}")"
 given=""
