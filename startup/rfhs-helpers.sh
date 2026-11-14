@@ -33,7 +33,8 @@ is_vm() {
 # across every namespace. Needs root.
 hwsim_phy_names() {
   for phy in /sys/class/ieee80211/*; do
-    if [ -e "${phy}/device/uevent" ] && grep -q '^DRIVER=mac80211_hwsim$' "${phy}/device/uevent"; then
+    driver="$(readlink -f "${phy}/device/driver" || true)"
+    if [ "${driver##*/}" = mac80211_hwsim ]; then
       index="$(cat "${phy}/index")"
       if [ "${phy##*/}" != "phy${index}" ]; then
         iw phy "${phy##*/}" set name "phy${index}"

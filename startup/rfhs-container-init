@@ -193,7 +193,8 @@ if [ -n "${CONTAINER_PHYS}" ]; then
       if iw phy "phy${phy_num}" info > /dev/null 2>&1; then
         if ! is_vm && [ ! -d '/root/wctf-restricted' ]; then
           unset driver
-          driver="$(awk -F'=' '{print $2}' "/sys/class/ieee80211/phy${phy_num}/device/uevent")"
+          driver="$(readlink -f "/sys/class/ieee80211/phy${phy_num}/device/driver")"
+          driver="${driver##*/}"
           if [ 'mac80211_hwsim' != "${driver}" ]; then
             printf "Requested phy is using %s driver instead of the expected mac80211_hwsim.  Failing safe.\n" "${driver}"
             exit 1
