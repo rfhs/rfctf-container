@@ -31,13 +31,19 @@ needs() {
 all_needs() {
   needs first_install awk cat chmod cp cut dirname gpasswd grep ln mkdir modinfo sed sleep systemctl uname
   # docker_userns_remap, which this runs once docker is installed
-  needs docker_userns_remap awk getent grep mkdir python3 sed sleep touch useradd
-  needs contestant_apparmor cat cmp mv
+  needs docker_userns_remap awk getent grep id mkdir python3 sed sleep touch useradd
+  needs contestant_apparmor apparmor_parser cat cmp id mv
+  # rfctf_status runs at every login; the rest are run by hand on the host
+  needs rfctf_status cat cloud-init pgrep sleep
+  needs image-prep awk df find grep lsb_release mkdir rm tail truncate wc
+  needs vm_test awk cloud-init grep sleep wc
+  needs send_metrics.sh date hostname sleep
   # The startup scripts this links into /etc/local.d don't check for
   # themselves, so a command one of them starts to run has to be added here.
   # docker, iw and aws aren't checked, as this installs them below, and
   # 07_rfctf-sdr.start and 08_fosphor_knob.start aren't linked.
-  needs rfhs-container-init awk cat chown dirname find grep ip mkdir mount mountpoint rm sed sleep stat touch
+  needs rfhs-helpers.sh awk cat find ls readlink sleep tr uname
+  needs rfhs-container-init awk cat chown dirname find grep ip mkdir mount mountpoint readlink rm sed sleep stat touch
   needs fixphy.sh cat find seq
   needs 00_aws_set_dns.start cat
   needs 00_docker_check.start awk shutdown sleep
@@ -60,15 +66,18 @@ all_needs() {
 # package command: the Ubuntu package with command in it
 package() {
   case "${1}" in
+    apparmor_parser) printf 'apparmor\n';;
     awk) printf 'mawk\n';;
-    cat|chmod|chown|cp|cut|dirname|ln|mkdir|mv|rm|seq|sleep|stat|touch|uname) printf 'coreutils\n';;
+    cat|chmod|chown|cp|cut|date|df|dirname|id|ln|ls|mkdir|mv|readlink|rm|seq|sleep|stat|tail|touch|tr|truncate|uname|wc) printf 'coreutils\n';;
     cmp) printf 'diffutils\n';;
     find) printf 'findutils\n';;
     getent) printf 'libc-bin\n';;
     gpasswd|useradd) printf 'passwd\n';;
     ip) printf 'iproute2\n';;
+    lsb_release) printf 'lsb-release\n';;
     lsmod|modinfo|modprobe) printf 'kmod\n';;
     mountpoint) printf 'util-linux\n';;
+    pgrep) printf 'procps\n';;
     shutdown|systemctl) printf 'systemd-sysv\n';;
     snap) printf 'snapd\n';;
     uuidgen) printf 'uuid-runtime\n';;
