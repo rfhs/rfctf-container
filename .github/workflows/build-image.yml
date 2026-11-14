@@ -192,7 +192,7 @@ jobs:
           df -h /
 
   publish:
-    name: Publish ${{ inputs.script }} for ${{ join(fromJSON(inputs.platforms), ', ') }}
+    name: Publish to GitHub Container Registry
     needs: build
     if: inputs.publish && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
