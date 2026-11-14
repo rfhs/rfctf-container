@@ -1,8 +1,9 @@
 #!/bin/sh
 # Tests contestant_containers/files/kali_panel_trim in a running Kali
 # contestant container, on copies of kali-themes' panel: it removes exactly
-# cpugraph and genmon, and anything other than the panel it expects fails and
-# is left as it was. Also checks the image's own panel has neither.
+# cpugraph and genmon, also from the light panel kali-themes uses on arm, and
+# anything other than the panel it expects fails and is left as it was. Also
+# checks the image's own panel has neither.
 #   ./contestant_containers/tests/test_kali_panel_trim.sh container
 set -eu
 
@@ -53,6 +54,15 @@ trim "${orig}" && rc=0 || rc=$?
   && grep -q '<property name="plugin-14"' "${t}/panel" && grep -q '<property name="plugin-16"' "${t}/panel"
 result $? "kali-themes' panel loses cpugraph and genmon, their ids and nothing else"
 cp "${t}/panel" "${t}/trimmed"
+
+# as kali-themes' postinst does on arm
+sed '/<!--/d' "${orig}" > "${t}/arm"
+trim "${t}/arm" && rc=0 || rc=$?
+[ "${rc}" = 0 ] && ! grep -q -e cpugraph -e genmon "${t}/panel" \
+  && [ "$(($(wc -l < "${t}/before") - $(wc -l < "${t}/panel")))" = 38 ] \
+  && ! grep -q '^        <value type="int" value="1[35]"/>$' "${t}/panel" \
+  && grep -q '<property name="plugin-14"' "${t}/panel" && grep -q '<property name="plugin-16"' "${t}/panel"
+result $? "the arm panel loses cpugraph and genmon, their ids in both plugin-ids and nothing else"
 
 trim "${t}/trimmed" && rc=0 || rc=$?
 fails_unchanged

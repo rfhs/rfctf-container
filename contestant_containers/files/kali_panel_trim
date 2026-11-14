@@ -3,13 +3,15 @@
 # genmon runs Kali's VPN IP script every second, and the two cost more idle
 # CPU than the rest of the container. It fails, leaving the panel as it was,
 # unless the lines it removes are exactly the ones below, so a change to
-# Kali's panel has to be looked at here.
+# Kali's panel has to be looked at here. On arm, kali-themes' postinst deletes
+# the comment markers around the "Light panel", whose plugin-ids has genmon
+# but not cpugraph, so there genmon's id comes out of it too.
 #   kali_panel_trim [panel]
 # panel defaults to /etc/xdg/xfce4/panel/default.xml.
 set -eu
 
 missing_tools=""
-for tool in cat cmp mktemp rm sed; do
+for tool in cat cmp grep mktemp rm sed; do
   command -v "${tool}" > /dev/null 2>&1 || missing_tools="${missing_tools} ${tool}"
 done
 if [ -n "${missing_tools}" ]; then
@@ -23,9 +25,12 @@ removed="$(mktemp)"
 expected="$(mktemp)"
 trap 'rm -f "${edited}" "${removed}" "${expected}"' EXIT
 
-cat > "${expected}" << 'EOF'
-        <value type="int" value="13"/>
-        <value type="int" value="15"/>
+{
+  printf '        <value type="int" value="13"/>\n        <value type="int" value="15"/>\n'
+  if ! grep -q '<!-- Light panel' "${panel}"; then
+    printf '        <value type="int" value="15"/>\n'
+  fi
+  cat << 'EOF'
     <property name="plugin-13" type="string" value="cpugraph">
       <property name="update-interval" type="int" value="0"/>
       <property name="time-scale" type="int" value="0"/>
@@ -62,6 +67,7 @@ cat > "${expected}" << 'EOF'
       <property name="font" type="string" value="Fira Code Medium 8"/>
     </property>
 EOF
+} > "${expected}"
 
 # sed deletes, writing each deleted line to ${removed}: the two plugins' ids
 # in the panel's plugin-ids, and each plugin's property, up to the next
