@@ -6,8 +6,17 @@ RUN \
   echo 'deb https://deb.parrotsec.io/parrot echo-backports main contrib non-free non-free-firmware' >> /etc/apt/sources.list.d/parrotsec.list && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" update --error-on=any && \
   DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" dist-upgrade -y && \
+  # parrot-desktop-xfce 7.5.0 (2026-11-11) depends on echo-themes-xfce (>= 1.3+parrot8), which Parrot
+  # hasn't published, so until it does this installs the metapackage's other dependencies. To watch it:
+  #   https://deb.parrotsec.io/parrot/pool/main/e/echo-themes/
+  #   https://gitlab.com/parrotsec/packages/echo-themes
+  desktop="parrot-desktop-xfce" && \
+  if ! apt-cache policy echo-themes-xfce | grep -q '^  Candidate: [^(]'; then \
+    echo "Parrot has no echo-themes-xfce, installing parrot-desktop-xfce's other dependencies" && \
+    desktop="$(apt-cache show --no-all-versions parrot-desktop-xfce | sed -n 's/^Depends: //p' | tr ',' '\n' | sed 's/^ *//; s/[ |(].*//' | grep -vx echo-themes-xfce | tr '\n' ' ')"; \
+  fi && \
   # missing urh, gr-lora_sdr, nrsc5, hashcat-utils; broken freeradius-wpe (needs bookworm's libperl5.36 and libpython3.11)
-  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd hostapd-mana iw kea-dhcp4-server mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-wpe macchanger tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet parrot-desktop-xfce xfce4-notifyd echo-themes -y --allow-remove-essential && \
+  DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confnew" install --no-install-recommends aircrack-ng asleap hostapd hostapd-mana iw kea-dhcp4-server mdk3 mdk4 pixiewps reaver wifi-honey wifite bully hcxdumptool hcxtools hostapd-wpe macchanger tshark wireshark termshark vim plocate man pciutils hashcat wpasupplicant less bash-completion ssh supervisor novnc xvfb x11vnc dbus-x11 dialog tmux tcpdump nmap curl gnuradio gqrx-sdr gr-osmosdr fldigi qsstv wsjtx make firefox-esr libnotify-bin kismet ${desktop} xfce4-notifyd echo-themes -y --allow-remove-essential && \
   apt-get autoremove --purge -y && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
