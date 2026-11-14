@@ -143,6 +143,23 @@ theirs. The radios go back to the host when the container stops, keeping the
 names they had in it, so it first names every free radio `phy` and its index
 again.
 
+## scan_hwsim.sh
+
+Scans from a free `mac80211_hwsim` radio on the host, which shares the
+medium with every container's radios, and prints what a contestant would
+hear: each BSS's address, frequency, encryption and SSID. Encryption is
+`open` without the privacy bit, `wep` with it and no RSN or WPA element, and
+`wpa` with one. It needs root and a radio no container holds; the game loads
+more than it gives out.
+
+```sh
+sudo ./tools/scan_hwsim.sh                 # every BSS heard
+sudo ./tools/scan_hwsim.sh RFHS_RFCTF_WEP  # only these, probed for by name
+```
+
+Two BSSes with one SSID, such as a contestant's AP copying a game network's
+name, show up as two lines with different addresses.
+
 ## test_contestant_images.sh
 
 Tests contestant images the way their build scripts do, without building or
