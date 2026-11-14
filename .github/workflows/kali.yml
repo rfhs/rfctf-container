@@ -49,4 +49,5 @@ jobs:
       hwsim: true
       startup-wait: '120'
       timeout-minutes: 180
+      platforms: '["amd64", "arm64"]'
       publish: true

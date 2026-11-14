@@ -1,5 +1,7 @@
 # The build scripts only push to Docker Hub from the RFHS build hosts; with
-# publish, this pushes to GitHub Container Registry
+# publish, this pushes to GitHub Container Registry. Each architecture in
+# platforms builds and tests on a native runner and pushes <VERS>-<arch>;
+# once all of them pass, <VERS> and latest become a multi-arch index of those.
 name: Build and test an image
 
 on:
@@ -42,11 +44,16 @@ on:
         description: Ubuntu packages extra-test needs on the runner
         type: string
         default: ''
+      platforms:
+        description: The architectures to build and test on, as a JSON list of amd64 and arm64
+        type: string
+        default: '["amd64"]'
       publish:
         description: >-
           On main, push the image the build script tagged to
-          ghcr.io/<owner>/<DISTRO> as <VERS> and latest; the calling workflow
-          has to grant packages: write
+          ghcr.io/<owner>/<DISTRO> as <VERS>-<arch>, then, once every
+          architecture passes, <VERS> and latest for all of them; the calling
+          workflow has to grant packages: write
         type: boolean
         default: false
 
@@ -55,8 +62,12 @@ on:
 
 jobs:
   build:
-    name: ${{ inputs.script }}
-    runs-on: ubuntu-24.04
+    name: ${{ inputs.script }} (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(inputs.platforms) }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
     defaults:
       run:
@@ -142,10 +153,11 @@ jobs:
 
       # The label links a new package to this repository, which gives this
       # repository's workflows write access to it.
-      - name: Publish to GitHub Container Registry
+      - name: Publish this architecture to GitHub Container Registry
         if: inputs.publish && github.ref == 'refs/heads/main'
         env:
           SCRIPT: ${{ inputs.script }}
+          ARCH: ${{ matrix.arch }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           distro="$(sed -n 's/^DISTRO="\(.*\)"$/\1/p' "${SCRIPT}")"
@@ -155,10 +167,9 @@ jobs:
           printf '%s\n' "${GITHUB_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
           printf 'FROM rfhs/%s:%s\n' "${distro}" "${vers}" | docker build \
             --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
-            -t "${image}:${vers}" -t "${image}:latest" -
-          docker push "${image}:${vers}"
-          docker push "${image}:latest"
-          echo "Published ${image}:${vers} and ${image}:latest" >> "${GITHUB_STEP_SUMMARY}"
+            -t "${image}:${vers}-${ARCH}" -
+          docker push "${image}:${vers}-${ARCH}"
+          echo "Published ${image}:${vers}-${ARCH}" >> "${GITHUB_STEP_SUMMARY}"
 
       # On failure the contestant scripts leave rfhs-<distro>-ci running.
       - name: Show the containers
@@ -179,3 +190,40 @@ jobs:
           done
           docker image ls
           df -h /
+
+  publish:
+    name: Publish ${{ inputs.script }} for ${{ join(fromJSON(inputs.platforms), ', ') }}
+    needs: build
+    if: inputs.publish && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: ${{ inputs.directory }}
+
+      - name: Publish the multi-arch image to GitHub Container Registry
+        working-directory: ${{ inputs.directory }}
+        env:
+          SCRIPT: ${{ inputs.script }}
+          PLATFORMS: ${{ inputs.platforms }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          distro="$(sed -n 's/^DISTRO="\(.*\)"$/\1/p' "${SCRIPT}")"
+          vers="$(sed -n 's/^VERS="\(.*\)"$/\1/p' "${SCRIPT}")"
+          : "${distro:?no DISTRO= in ${SCRIPT}}" "${vers:?no VERS= in ${SCRIPT}}"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${distro}"
+          sources=()
+          while read -r arch; do
+            sources+=("${image}:${vers}-${arch}")
+          done < <(jq -r '.[]' <<< "${PLATFORMS}")
+          printf '%s\n' "${GITHUB_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          docker buildx imagetools create -t "${image}:${vers}" -t "${image}:latest" "${sources[@]}"
+          docker buildx imagetools inspect "${image}:${vers}"
+          {
+            echo "Published ${image}:${vers} and ${image}:latest from ${sources[*]}"
+            echo '```'
+            docker buildx imagetools inspect "${image}:${vers}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
