@@ -160,6 +160,9 @@ if [ "${platform}" = ec2 ]; then
     echo GRUB_FLAVOUR_ORDER=aws | sudo tee /etc/default/grub.d/99-linux-aws.cfg > /dev/null && sudo update-grub 2> /dev/null'
   reboot_vm
   check 'the VM runs the linux-aws kernel, as the AMIs do' 'uname -r | grep -q -- "-aws\$"'
+  # A long-lived instance can lack what a new AMI has: first_install has to
+  # install snapd, which the AWS CLI comes from, and curl for the startup
+  vm 'sudo DEBIAN_FRONTEND=noninteractive apt-get -q purge -y snapd curl > /dev/null'
 fi
 vm 'cat /etc/os-release; uname -r; cat /sys/devices/virtual/dmi/id/board_vendor 2> /dev/null || true'
 

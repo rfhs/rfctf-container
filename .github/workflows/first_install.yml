@@ -9,6 +9,7 @@ on:
       - misc/contestant_apparmor
       - startup/**
       - tools/test_first_install_vm.sh
+      - tools/test_first_install_packages.sh
       - contestant_containers/tests/test_firefox_sandbox.sh
       - .github/workflows/first_install.yml
   pull_request:
@@ -26,6 +27,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  packages:
+    name: ${{ matrix.release }} packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ['24.04', '26.04']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check the package first_install installs for each missing command
+        env:
+          RELEASE: ${{ matrix.release }}
+        run: ./tools/test_first_install_packages.sh "${RELEASE}"
+
   vm:
     name: ${{ matrix.release }} ${{ matrix.platform }}
     runs-on: ubuntu-24.04

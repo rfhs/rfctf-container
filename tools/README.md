@@ -192,9 +192,10 @@ Ubuntu's AppArmor) and sandboxes Firefox's content processes. With `ec2`
 the VM is made like Ubuntu's AMIs, which can't be downloaded: it switches to the `linux-aws` kernel they run, whose modules
 are packaged differently from the cloud image's generic kernel, boots with
 UEFI from an NVMe disk as on Nitro, and gives Amazon EC2 as its board vendor, so
-`first_install` takes its EC2 path and has to install the AWS CLI; the
-EC2-only startup scripts still fail there, with no instance metadata or
-credentials to use.
+`first_install` takes its EC2 path and has to install the AWS CLI; it also
+purges snapd and curl first, as a long-lived instance may lack them, so
+`first_install` has to install them. The EC2-only startup scripts still fail
+there, with no instance metadata or credentials to use.
 
 ```sh
 ./tools/test_first_install_vm.sh 24.04 ec2
@@ -208,6 +209,22 @@ the next run. `VM_MEMORY` (default 12G) and `VM_CPUS` (default all) size the
 VM. `.github/workflows/first_install.yml` runs it for both releases and both
 platforms.
 
+## test_first_install_packages.sh
+
+Checks `misc/first_install`'s `package` function, which names the Ubuntu
+package for a missing command. In an `ubuntu:<release>` container it installs
+the package for every command `first_install`'s `needs` lines name, and for
+`snap`, and each command has to be there afterwards, with the file it runs
+from that package or one it depends on, such as python3's
+python3.12-minimal. It needs docker but no root.
+
+```sh
+./tools/test_first_install_packages.sh 24.04
+./tools/test_first_install_packages.sh 26.04
+```
+
+It prints PASS or FAIL for each command. `.github/workflows/first_install.yml`
+runs it for both releases.
 
 ## profile_contestant_security.sh
 
