@@ -120,6 +120,19 @@ fi
 if ! modinfo mac80211_hwsim > /dev/null 2>&1; then
   missing="${missing} linux-modules-extra-$(uname -r)"
 fi
+# retry command...: runs command, tried three times, as registries and the
+# snap store have bad moments
+retry() {
+  tries=0
+  until "$@"; do
+    tries=$((tries + 1))
+    if [ "${tries}" -ge 3 ]; then
+      return 1
+    fi
+    sleep 30
+  done
+}
+
 aws_snap=""
 if [ -n "${on_ec2}" ] && [ ! -x "$(command -v aws)" ]; then
   # Ubuntu 24.04 has no awscli package; AWS's snap stands in for it
@@ -142,7 +155,7 @@ fi
 if [ -n "${aws_snap}" ]; then
   # A snapd installed just now has to seed itself first
   snap wait system seed.loaded
-  snap install aws-cli --classic
+  retry snap install aws-cli --classic
 fi
 
 # Before pulling anything: with the remapping on, docker keeps its images
@@ -204,18 +217,6 @@ EOF
 systemctl daemon-reload
 fi
 
-# pull image: docker pull, tried three times, as registries have bad moments
-pull() {
-  tries=0
-  until docker pull "${1}"; do
-    tries=$((tries + 1))
-    if [ "${tries}" -ge 3 ]; then
-      return 1
-    fi
-    sleep 30
-  done
-}
-
 # Now we grab the docker images we need
 for i in "$(pwd)"/../startup/0*; do
   if [ "${i}" = "$(pwd)/../startup/0*" ]; then
@@ -233,10 +234,10 @@ for i in "$(pwd)"/../startup/0*; do
     continue
   fi
   printf 'Pulling %s\n' "${image}"
-  pull "${image}"
+  retry docker pull "${image}"
 done
-pull certbot/certbot
-pull nginx
+retry docker pull certbot/certbot
+retry docker pull nginx
 
 # Prep some useful info for users logging in
 get_homedir() {
