@@ -271,3 +271,22 @@ daily and on changes to them.
 ./tools/check_contestant_profiles.py
 ./tools/check_contestant_profiles.py --sync
 ```
+
+## qemu_arm64_hashcat.sh
+
+Runs `contestant-checker`'s hashcat OpenCL test in an arm64 container of
+parrot's or kali's base image, with only hashcat, pocl and the OpenCL ICD
+loader installed, under qemu-user for each emulated CPU given (by default
+neoverse-n2, as GitHub's arm64 runners have, neoverse-v1, neoverse-n1, which
+has no SVE, and max). It reports for each whether hashcat cracked the hash,
+crashed or failed, and on a failure prints `hashcat -I` and `POCL_DEBUG=all`
+output. The base is pulled by digest, so the host's amd64 `:latest` keeps
+its tag. It needs binfmt_misc to run aarch64 binaries with a static
+`qemu-aarch64` registered with the `F` flag; on Gentoo, that's qemu with
+`USE=static-user` and `QEMU_BINFMT_FLAGS="OCF"` in `/etc/conf.d/qemu-binfmt`
+for the `qemu-binfmt` service.
+
+```sh
+./tools/qemu_arm64_hashcat.sh parrot
+./tools/qemu_arm64_hashcat.sh kali neoverse-n2
+```
