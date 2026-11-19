@@ -1,4 +1,4 @@
-FROM docker.io/parrotsec/core:latest
+FROM docker.io/parrotsec/core:latest AS parrot
 RUN \
   echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && \
   echo 'deb https://deb.parrotsec.io/parrot echo main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/parrotsec.list && \
@@ -54,3 +54,14 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord/supervisord.conf", "--pidfi
 ENTRYPOINT []
 
 HEALTHCHECK --interval=60s --start-period=120s --retries=2 CMD /usr/local/sbin/contestant-checker
+
+FROM parrot AS parrot-amd64
+
+# Parrot's pocl 6.0 crashes building hashcat's kernels on arm64 with its default work-group
+# method, loopvec (Kali's pocl 7.1 doesn't). ENV covers the desktop and the healthcheck,
+# /etc/environment ssh logins.
+FROM parrot AS parrot-arm64
+ENV POCL_WORK_GROUP_METHOD=loops
+RUN echo "POCL_WORK_GROUP_METHOD=${POCL_WORK_GROUP_METHOD}" >> /etc/environment
+
+FROM parrot-${TARGETARCH}
