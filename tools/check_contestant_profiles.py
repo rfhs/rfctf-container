@@ -50,6 +50,14 @@ def seccomp_expected(upstream, ours):
     return profile
 
 
+def stacked_peer(match):
+    """StackedPeerName's label: the kernel sorts a stack's profiles by name."""
+    names = sorted({NAME, *re.findall(r'"([^"]*)"', match.group(1))})
+    if any(re.search(r'[\\"*?[\]{}^,]', n) for n in names):
+        sys.exit('apparmor/template.go stacks a profile name that needs escaping; update ' + sys.argv[0])
+    return '"' + '//&'.join(names) + '"'
+
+
 def apparmor_rendered(template_go):
     """apparmor/template.go's profile, from its profile line to before its closing brace."""
     match = re.search(r'const baseTemplate = `(.*?)`', template_go, re.S)
@@ -64,6 +72,7 @@ def apparmor_rendered(template_go):
         sys.exit("apparmor/template.go's InnerImports changed; update " + sys.argv[0])
     body = body.replace(inner, '{\n  include <abstractions/base>\n')
     body = body.replace('{{.Name}}', NAME).replace('{{.PeerName}}', NAME)
+    body = re.sub(r'\{\{\.StackedPeerName((?: "[^"\\]*")+)\}\}', stacked_peer, body)
     # dockerd runs unconfined where it has no profile of its own
     body = body.replace('{{.DaemonProfile}}', 'unconfined')
     if '{{' in body:
