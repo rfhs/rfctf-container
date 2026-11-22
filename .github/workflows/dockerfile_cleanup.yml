@@ -1,0 +1,32 @@
+name: dockerfile_cleanup
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - contestant_containers/Dockerfile.*
+      - infrastructure_containers/Dockerfile.*
+      - tools/test_dockerfile_cleanup.sh
+      - .github/workflows/dockerfile_cleanup.yml
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check the cleanup of every emerge step
+        run: ./tools/test_dockerfile_cleanup.sh

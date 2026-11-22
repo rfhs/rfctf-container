@@ -37,8 +37,10 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use app-crypt/hashcat app-crypt/hashcat-utils net-wireless/hostapd-mana net-misc/kea www-apps/novnc x11-misc/x11vnc net-analyzer/wireshark net-analyzer/termshark app-misc/tmux app-misc/screen net-analyzer/tcpdump net-analyzer/nmap media-radio/fldigi media-radio/qsstv media-radio/wsjtx_improved net-wireless/urh && \
   # also depclean bdeps and deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # nothing is installed in /var/empty, so with it as ROOT eclean-pkg --deep empties PKGDIR and every binrepos.conf location
+  mkdir -p "$(portageq pkgdir)" && ROOT=/var/empty eclean-pkg --deep && \
   # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/doc/* /usr/lib/debug && \
+  rm -rf /var/cache/{distfiles,edb/binhost,edb/dep}/* /etc/portage/gnupg /usr/share/doc/* /usr/lib/debug && \
   sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 RUN \
   # make sure the menus exist

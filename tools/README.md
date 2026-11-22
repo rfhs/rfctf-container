@@ -226,6 +226,28 @@ python3.12-minimal. It needs docker but no root.
 It prints PASS or FAIL for each command. `.github/workflows/first_install.yml`
 runs it for both releases.
 
+## test_dockerfile_cleanup.sh
+
+Checks the cleanup in every Dockerfile step that runs `emerge`. Each one has
+to empty PKGDIR and every `binrepos.conf` location with `eclean-pkg`, run
+with `ROOT` set to `/var/empty`, where nothing is installed, so that it
+deletes every binpkg. Plain `eclean-pkg --deep` keeps the binpkgs of
+installed packages. Binpkgs from the Pentoo binhosts are kept under
+`/var/cache/binhost`, not in PKGDIR, and an `rm -rf` of the usual paths would
+leave them in the image. Each step also has to remove `/etc/portage/gnupg`.
+That's the Portage trust keyring, which holds a private key and its
+passphrase, so each system has to make its own.
+
+```sh
+./tools/test_dockerfile_cleanup.sh
+```
+
+With no arguments it checks every `*_containers/Dockerfile.*`.
+`.github/workflows/dockerfile_cleanup.yml` runs it.
+pentoo-livecd's `livecd/tools/test-docker-eclean.sh` runs the same
+`ROOT=... eclean-pkg --deep` in `pentoolinux/pentoo-core` and checks that it
+empties both kinds of location.
+
 ## profile_contestant_security.sh
 
 Shows what contestant images need beyond docker's default seccomp and

@@ -15,8 +15,10 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # nothing is installed in /var/empty, so with it as ROOT eclean-pkg --deep empties PKGDIR and every binrepos.conf location
+  mkdir -p "$(portageq pkgdir)" && ROOT=/var/empty eclean-pkg --deep && \
   # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc}/*
+  rm -rf /var/cache/{distfiles,edb/binhost,edb/dep}/* /etc/portage/gnupg /usr/share/{man,doc}/*
 
 FROM rfctf-minimal AS rfctf-sdr
 ARG PORTAGE_BINHOST
@@ -26,8 +28,10 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
   # remove build deps
   emerge --depclean --with-bdeps=n --jobs=$(nproc) && \
+  # nothing is installed in /var/empty, so with it as ROOT eclean-pkg --deep empties PKGDIR and every binrepos.conf location
+  mkdir -p "$(portageq pkgdir)" && ROOT=/var/empty eclean-pkg --deep && \
   # rm all the files we don't want
-  rm -rf /var/cache/{binpkgs,distfiles,edb/binhost,edb/dep}/* /usr/share/{man,doc}/*
+  rm -rf /var/cache/{distfiles,edb/binhost,edb/dep}/* /etc/portage/gnupg /usr/share/{man,doc}/*
 RUN portageq has_version / '>=net-wireless/bladerf-firmware-2.6.0'
 RUN portageq has_version / '>=net-wireless/bladerf-fpga-0.16.0'
 RUN portageq has_version / '>=net-wireless/gnuradio-3.11_pre20260615-r1'
