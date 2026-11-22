@@ -226,27 +226,34 @@ python3.12-minimal. It needs docker but no root.
 It prints PASS or FAIL for each command. `.github/workflows/first_install.yml`
 runs it for both releases.
 
-## test_dockerfile_cleanup.sh
+## test_dockerfile_emerge.sh
 
-Checks the cleanup in every Dockerfile step that runs `emerge`. Each one has
-to empty PKGDIR and every `binrepos.conf` location with `eclean-pkg`, run
-with `ROOT` set to `/var/empty`, where nothing is installed, so that it
-deletes every binpkg. Plain `eclean-pkg --deep` keeps the binpkgs of
-installed packages. Binpkgs from the Pentoo binhosts are kept under
-`/var/cache/binhost`, not in PKGDIR, and an `rm -rf` of the usual paths would
-leave them in the image. Each step also has to remove `/etc/portage/gnupg`.
-That's the Portage trust keyring, which holds a private key and its
-passphrase, so each system has to make its own.
+Checks every Dockerfile step that runs `emerge`:
+
+- Before its first `emerge` it has to run `pentoo-trust-helper` from the
+  mounted pentoo repo, if that repo has it. The images ship without
+  `/etc/portage/gnupg` and the builds don't sync, so nothing else trusts the
+  binhost keys. Once the binhost signs its binpkgs, Portage rejects signed
+  binpkgs from a binhost without a `binrepos.conf` entry, such as
+  `www.pentoo.ch`, unless their key is trusted.
+- It has to empty PKGDIR and every `binrepos.conf` location with
+  `eclean-pkg --deep` and `ROOT` set to `/var/empty`, where nothing is
+  installed, so that it deletes every binpkg. Plain `eclean-pkg --deep` keeps
+  the binpkgs of installed packages. Binpkgs from the Pentoo binhosts are kept
+  under `/var/cache/binhost`, not in PKGDIR, and an `rm -rf` of the usual paths
+  would leave them in the image.
+- It has to remove `/etc/portage/gnupg`. That's the Portage trust keyring,
+  which holds a private key and its passphrase, so each system has to make
+  its own.
 
 ```sh
-./tools/test_dockerfile_cleanup.sh
+./tools/test_dockerfile_emerge.sh
 ```
 
 With no arguments it checks every `*_containers/Dockerfile.*`.
-`.github/workflows/dockerfile_cleanup.yml` runs it.
-pentoo-livecd's `livecd/tools/test-docker-eclean.sh` runs the same
-`ROOT=... eclean-pkg --deep` in `pentoolinux/pentoo-core` and checks that it
-empties both kinds of location.
+`.github/workflows/dockerfile_emerge.yml` runs it. pentoo-livecd's
+`livecd/tools/test-docker-eclean.sh` and `livecd/tools/test-docker-trust.sh`
+run the same `eclean-pkg` and trust lines in `pentoolinux/pentoo-core`.
 
 ## profile_contestant_security.sh
 

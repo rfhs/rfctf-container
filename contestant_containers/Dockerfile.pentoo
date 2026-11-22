@@ -11,6 +11,9 @@ RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage
   # --security=insecure is only needed for go
 # --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into this layer
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  # the image has no /etc/portage/gnupg and builds don't sync, so trust the binhost keys before emerging
+  helper="$(portageq get_repo_path / pentoo)/pentoo/pentoo-core/files/pentoo-trust-helper" && \
+  if [ -f "${helper}" ]; then bash "${helper}"; fi && \
   sed -i 's#-livecd#-drivers  -vnc opencl#' /etc/portage/make.conf && \
   echo 'pentoo/pentoo-wireless pentoo-full' >> /etc/portage/profile/package.use/pentoo && \
   echo 'pentoo/pentoo-radio -bladerf -bluetooth -hackrf -limesdr -plutosdr -rtlsdr' >> /etc/portage/profile/package.use/pentoo && \

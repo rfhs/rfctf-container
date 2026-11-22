@@ -1,4 +1,4 @@
-name: dockerfile_cleanup
+name: dockerfile_emerge
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
     paths: &paths
       - contestant_containers/Dockerfile.*
       - infrastructure_containers/Dockerfile.*
-      - tools/test_dockerfile_cleanup.sh
-      - .github/workflows/dockerfile_cleanup.yml
+      - tools/test_dockerfile_emerge.sh
+      - .github/workflows/dockerfile_emerge.yml
   pull_request:
     paths: *paths
   workflow_dispatch:
@@ -28,5 +28,5 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check the cleanup of every emerge step
-        run: ./tools/test_dockerfile_cleanup.sh
+      - name: Check every emerge step
+        run: ./tools/test_dockerfile_emerge.sh

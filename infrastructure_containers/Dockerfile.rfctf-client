@@ -10,6 +10,9 @@ ARG PORTAGE_BINHOST
 RUN echo 'FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"' >> /etc/portage/make.conf
 # --rebuilt-binaries=n and no --update, or pentoo-core's packages get reinstalled into these layers
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  # the image has no /etc/portage/gnupg and builds don't sync, so trust the binhost keys before emerging
+  helper="$(portageq get_repo_path / pentoo)/pentoo/pentoo-core/files/pentoo-trust-helper" && \
+  if [ -f "${helper}" ]; then bash "${helper}"; fi && \
   sed -i 's#-livecd#-drivers -pulseaudio -vnc opencl rfctf-minimal#' /etc/portage/make.conf && \
   # install the minimal metapackage
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
@@ -23,6 +26,9 @@ RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
 FROM rfctf-minimal AS rfctf-client
 ARG PORTAGE_BINHOST
 RUN --mount=type=bind,from=portage,source=/var/db/repos,target=/var/db/repos \
+  # the image has no /etc/portage/gnupg and builds don't sync, so trust the binhost keys before emerging
+  helper="$(portageq get_repo_path / pentoo)/pentoo/pentoo-core/files/pentoo-trust-helper" && \
+  if [ -f "${helper}" ]; then bash "${helper}"; fi && \
   sed -i 's#rfctf-minimal#rfctf-wifi rfctf-minimal#' /etc/portage/make.conf && \
   # install the actual metapackage
   emerge --getbinpkg=y --buildpkg=n --rebuilt-binaries=n --jobs=$(nproc) --deep --changed-use pentoo/rfctf-client && \
